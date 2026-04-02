@@ -39,8 +39,18 @@ export default function SignInScreen() {
         await signIn.prepareFirstFactor({ strategy: 'email_code' } as Parameters<typeof signIn.prepareFirstFactor>[0]);
         setStage('otp');
       } else if (result.status === 'needs_second_factor') {
-        // 2FA required — in Clerk dev mode use code 424242
-        await signIn.prepareSecondFactor({ strategy: 'totp' } as Parameters<typeof signIn.prepareSecondFactor>[0]);
+        // Pick the first available second factor strategy
+        const supported = result.supportedSecondFactors ?? [];
+        const factor = supported[0];
+        if (!factor) {
+          setError('2FA is required but no method is enrolled. Disable MFA enforcement in your Clerk dashboard.');
+          return;
+        }
+        if (factor.strategy === 'totp') {
+          // TOTP doesn't need prepare — just show input
+        } else {
+          await signIn.prepareSecondFactor({ strategy: factor.strategy } as Parameters<typeof signIn.prepareSecondFactor>[0]);
+        }
         setStage('otp2');
       } else {
         setError(`Unexpected status: ${result.status}. Contact support.`);
@@ -59,8 +69,10 @@ export default function SignInScreen() {
     setError(null);
 
     try {
+      const supported = signIn.supportedSecondFactors ?? [];
+      const strategy = (supported[0]?.strategy ?? 'totp') as Parameters<typeof signIn.attemptSecondFactor>[0]['strategy'];
       const result = await signIn.attemptSecondFactor({
-        strategy: 'totp',
+        strategy,
         code: otp.trim(),
       });
 
