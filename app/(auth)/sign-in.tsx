@@ -17,7 +17,7 @@ export default function SignInScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [otp, setOtp] = useState('');
-  const [stage, setStage] = useState<'credentials' | 'otp'>('credentials');
+  const [stage, setStage] = useState<'credentials' | 'otp' | 'otp2'>('credentials');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -36,14 +36,42 @@ export default function SignInScreen() {
         await setActive({ session: result.createdSessionId });
         router.replace('/');
       } else if (result.status === 'needs_first_factor') {
-        // Clerk requires an email code — prepare and show OTP input
         await signIn.prepareFirstFactor({ strategy: 'email_code' } as Parameters<typeof signIn.prepareFirstFactor>[0]);
         setStage('otp');
+      } else if (result.status === 'needs_second_factor') {
+        // 2FA required — in Clerk dev mode use code 424242
+        await signIn.prepareSecondFactor({ strategy: 'totp' } as Parameters<typeof signIn.prepareSecondFactor>[0]);
+        setStage('otp2');
       } else {
         setError(`Unexpected status: ${result.status}. Contact support.`);
       }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Sign-in failed. Check your credentials.';
+      setError(message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleOtp2() {
+    if (!isLoaded) return;
+    setLoading(true);
+    setError(null);
+
+    try {
+      const result = await signIn.attemptSecondFactor({
+        strategy: 'totp',
+        code: otp.trim(),
+      });
+
+      if (result.status === 'complete') {
+        await setActive({ session: result.createdSessionId });
+        router.replace('/');
+      } else {
+        setError('2FA verification incomplete. Please try again.');
+      }
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Invalid 2FA code. Try again.';
       setError(message);
     } finally {
       setLoading(false);
@@ -105,7 +133,7 @@ export default function SignInScreen() {
               {loading ? <ActivityIndicator color="#1a1a2e" /> : <Text style={styles.buttonText}>Sign In</Text>}
             </TouchableOpacity>
           </>
-        ) : (
+        ) : stage === 'otp' ? (
           <>
             <Text style={styles.subtitle}>Check your email for a verification code</Text>
             <TextInput
@@ -121,6 +149,28 @@ export default function SignInScreen() {
             {error ? <Text style={styles.error}>{error}</Text> : null}
             <TouchableOpacity style={[styles.button, loading && styles.buttonDisabled]} onPress={handleOtp} disabled={loading}>
               {loading ? <ActivityIndicator color="#1a1a2e" /> : <Text style={styles.buttonText}>Verify</Text>}
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => { setStage('credentials'); setError(null); setOtp(''); }}>
+              <Text style={styles.backLink}>← Back</Text>
+            </TouchableOpacity>
+          </>
+        ) : (
+          <>
+            <Text style={styles.subtitle}>Two-factor authentication required</Text>
+            <Text style={styles.hint}>Dev mode: use code 424242</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Authentication code"
+              placeholderTextColor="#888"
+              keyboardType="number-pad"
+              maxLength={6}
+              value={otp}
+              onChangeText={setOtp}
+              autoFocus
+            />
+            {error ? <Text style={styles.error}>{error}</Text> : null}
+            <TouchableOpacity style={[styles.button, loading && styles.buttonDisabled]} onPress={handleOtp2} disabled={loading}>
+              {loading ? <ActivityIndicator color="#1a1a2e" /> : <Text style={styles.buttonText}>Verify 2FA</Text>}
             </TouchableOpacity>
             <TouchableOpacity onPress={() => { setStage('credentials'); setError(null); setOtp(''); }}>
               <Text style={styles.backLink}>← Back</Text>
@@ -143,4 +193,5 @@ const styles = StyleSheet.create({
   buttonDisabled: { opacity: 0.6 },
   buttonText: { color: '#1a1a2e', fontSize: 16, fontWeight: 'bold' },
   backLink: { color: '#888', fontSize: 14, textAlign: 'center', marginTop: 4 },
+  hint: { color: '#f5c842', fontSize: 12, textAlign: 'center', opacity: 0.7 },
 });
