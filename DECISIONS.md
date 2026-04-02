@@ -66,6 +66,27 @@
 
 ## Phase 7 — Child Home + Emergency + Red Zone
 
+### D-010: API routes use +api.ts extension, not +server.ts
+**Decision:** Expo API route files are named `*+api.ts` (e.g. `generate-plan+api.ts`), not `*+server.ts`.
+
+**Rationale:** Expo Router requires the `+api.ts` suffix to identify server-side API routes. Files with `+server.ts` are treated as page routes (triggering "missing default export" warnings) and return 404 on all requests. Discovered during Phase 7 E2E verification.
+
+---
+
+### D-011: web.output must be "server" for API routes in dev
+**Decision:** `app.json` `web.output` is set to `"server"`, not `"static"`.
+
+**Rationale:** `"static"` output mode disables server-side route handling entirely. API routes only work with `"server"` output. This has no impact on native builds.
+
+---
+
+### D-012: PinGate uses localStorage fallback on web
+**Decision:** `lib/auth/PinGate.tsx` uses a `storage` abstraction: `expo-secure-store` on native, `localStorage` on web (`Platform.OS === 'web'`).
+
+**Rationale:** `expo-secure-store` throws at runtime on web. The PIN is not sensitive enough to block web testing. Native builds continue to use the encrypted keychain.
+
+---
+
 ### D-009: Red zone is a fullscreen takeover, not a modal
 **Decision:** The Red zone emergency screen (`app/(child)/emergency.tsx`) replaces the entire screen via `router.replace`, not a modal overlay.
 

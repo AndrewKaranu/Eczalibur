@@ -71,6 +71,40 @@
 
 ## Phase 7 — Child Home + Emergency + Red Zone (2026-04-02)
 
-*(in progress)*
+**Files created:**
+- `app/(child)/home.tsx` — zone banner, quest steps (from action plan), points badge, emergency button pinned at bottom
+- `app/(child)/emergency.tsx` — fullscreen Red zone takeover, numbered steps, Call Parent button, "I'm OK" exit
+- `app/(child)/plan.tsx` — all 3 zones with "YOU ARE HERE" badge on current zone
+- `app/(child)/log.tsx` — stub (Phase 8)
+- `app/(child)/store.tsx` — stub (Phase 10)
+
+**Status:** All 3 child screens verified end-to-end.
+
+---
+
+## Phase 7 Verification + Infrastructure Fixes (2026-04-02)
+
+**Bug fixes applied:**
+- Renamed `app/api/*+server.ts` → `*+api.ts` — Expo Router requires `+api.ts` extension for API routes (`+server.ts` caused 404s)
+- Changed `app.json` `web.output` from `"static"` to `"server"` — required for API routes to be served in dev
+- Fixed sign-in `placeholder` from `"Email"` to `"Username"` (field takes username identifier, not email)
+- Added `localStorage` fallback in `lib/auth/PinGate.tsx` — `expo-secure-store` not available on web
+
+**Playwright E2E infrastructure added:**
+- `playwright.config.ts` — Pixel 5 viewport, port 8083 base URL
+- `e2e/smoke.spec.ts` — app load + sign-in field checks
+- `e2e/phases1-7.spec.ts` — full onboarding + child screens verification suite
+- `test:e2e` and `test:e2e:ui` scripts in `package.json`
+- Added `test-results/`, `.claude/`, `playwright-report/` to `.gitignore`
+
+**End-to-end verification (Playwright MCP):**
+- Sign-in with `zigahtest` / `zigahk2004` → onboarding auto-redirected ✅
+- Steps 1–8 completed: consent, child details, body map (SVG chips), medications, triggers, plan generation, review, prizes ✅
+- Claude generated full 3-zone WAP with Montreal weather context (74% humidity) and `[DOCTOR TO CONFIRM]` markers ✅
+- Finish Setup → dashboard ("TestChild's Quest", 🟢 Green zone) ✅
+- Switch to Child View → PIN gate (localStorage fallback) → set PIN 1234 ✅
+- Child home: zone banner, quest steps from plan, points badge, all buttons ✅
+- Emergency: fullscreen red, steps from plan, "I'm OK" returns to home ✅
+- Plan screen: 3 zone cards, "YOU ARE HERE" on Green ✅
 
 ---
