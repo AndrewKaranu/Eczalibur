@@ -36,3 +36,37 @@
 **Decision:** The child PIN is stored via `expo-secure-store` (encrypted), not AsyncStorage.
 
 **Rationale:** The PIN is a secret credential. AsyncStorage is unencrypted. expo-secure-store uses the device keychain/keystore.
+
+---
+
+## Phase 6 — Parent Onboarding Wizard
+
+### D-006: Anthropic client initialised inside POST handler, not at module level
+**Decision:** `new Anthropic(...)` is called inside each API route's POST function, not at module scope.
+
+**Rationale:** Expo Metro bundles `+server.ts` files for the client too during development. A module-level `new Anthropic()` triggers the "running in a browser-like environment" error. Moving it inside the handler means it only executes server-side at request time.
+
+---
+
+### D-007: Body area selection uses SVG body map, not text chips
+**Decision:** Step 3 of onboarding uses an interactive SVG front/back silhouette (`components/parent/BodyMap.tsx`) instead of text chip buttons.
+
+**Rationale:** Tapping a visual body region is faster and less error-prone than reading a list of anatomical labels, especially for parents under stress during a flare.
+
+**Impact:** `react-native-svg` added as a dependency. SVG shape `onPress` used directly — `Pressable` cannot be a child of `Svg`.
+
+---
+
+### D-008: Clerk sign-in uses username, not email
+**Decision:** The Clerk identifier for sign-in is the username, not the email address.
+
+**Rationale:** Clerk instance is configured with username as the primary identifier. Email-only login returns incorrect-credential errors even with correct email/password.
+
+---
+
+## Phase 7 — Child Home + Emergency + Red Zone
+
+### D-009: Red zone is a fullscreen takeover, not a modal
+**Decision:** The Red zone emergency screen (`app/(child)/emergency.tsx`) replaces the entire screen via `router.replace`, not a modal overlay.
+
+**Rationale:** For a child in distress, fullscreen red creates maximum visual urgency and eliminates the possibility of accidentally dismissing it. Parent must explicitly dismiss from a dedicated button.
