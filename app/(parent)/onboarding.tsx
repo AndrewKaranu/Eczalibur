@@ -18,6 +18,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { BodyMap } from '@/components/parent/BodyMap';
 import { OnboardingStep } from '@/components/parent/OnboardingStep';
 import { fetchWeather } from '@/lib/weather';
 import { useAppStore } from '@/store/useAppStore';
@@ -25,7 +26,7 @@ import type { ActionPlan, BodyArea, Medication, Prize } from '@/lib/types';
 
 const TOTAL_STEPS = 8;
 
-const ALL_AREAS: BodyArea[] = ['face', 'neck', 'chest', 'back', 'arms', 'hands', 'legs', 'feet', 'scalp', 'other'];
+
 const COMMON_TRIGGERS = ['Dust mites', 'Pet dander', 'Pollen', 'Sweat', 'Heat', 'Cold/dry air', 'Wool/synthetic fabrics', 'Soap/detergent', 'Stress', 'Certain foods'];
 const DEFAULT_PRIZES: Prize[] = [
   { id: '1', name: 'Extra Screen Time', description: '30 min extra screen time', pointCost: 50, icon: '📱', isActive: true, createdAt: new Date().toISOString() },
@@ -238,20 +239,8 @@ export default function OnboardingScreen() {
 
         {/* ── Step 3: Body areas ── */}
         {step === 3 && (
-          <OnboardingStep step={3} totalSteps={TOTAL_STEPS} title="Affected areas" subtitle="Select all areas where eczema typically appears.">
-            <View style={styles.chipGrid}>
-              {ALL_AREAS.map((area) => (
-                <Pressable
-                  key={area}
-                  style={[styles.chip, selectedAreas.includes(area) && styles.chipSelected]}
-                  onPress={() => toggleArea(area)}
-                >
-                  <Text style={[styles.chipText, selectedAreas.includes(area) && styles.chipTextSelected]}>
-                    {area.charAt(0).toUpperCase() + area.slice(1)}
-                  </Text>
-                </Pressable>
-              ))}
-            </View>
+          <OnboardingStep step={3} totalSteps={TOTAL_STEPS} title="Affected areas" subtitle="Tap the body map or labels to mark where eczema appears.">
+            <BodyMap selected={selectedAreas} onToggle={toggleArea} />
           </OnboardingStep>
         )}
 
