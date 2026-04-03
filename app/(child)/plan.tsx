@@ -1,5 +1,6 @@
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ImageBackground, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useTheme } from '@/context/ThemeContext';
+import { BG, overlayColor } from '@/constants/backgrounds';
 import { useAppStore } from '@/store/useAppStore';
 import type { Zone } from '@/lib/types';
 
@@ -16,13 +17,14 @@ const FALLBACK: Record<Zone, string[]> = {
 };
 
 export default function PlanScreen() {
-  const { theme } = useTheme();
+  const { theme, isDark } = useTheme();
   const { profile, currentZone } = useAppStore();
   const plan = profile?.actionPlan;
   const zone = currentZone();
 
   return (
-    <View style={[styles.screen, { backgroundColor: theme.bgPrimary }]}>
+    <ImageBackground source={isDark ? BG.dark : BG.light} style={styles.screen} resizeMode="cover">
+      <View style={[StyleSheet.absoluteFillObject, { backgroundColor: overlayColor(isDark, 0.48) }]} />
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
 
         <Text style={[styles.title, { color: theme.gold }]}>📜 Your Action Plan</Text>
@@ -76,7 +78,7 @@ export default function PlanScreen() {
         )}
 
       </ScrollView>
-    </View>
+    </ImageBackground>
   );
 }
 

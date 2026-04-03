@@ -4,12 +4,14 @@ import {
   ActivityIndicator,
   Alert,
   FlatList,
+  ImageBackground,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
 import { useTheme } from '@/context/ThemeContext';
+import { BG, overlayColor } from '@/constants/backgrounds';
 import { useAppStore } from '@/store/useAppStore';
 import type { Prize, RedemptionRequest } from '@/lib/types';
 
@@ -69,7 +71,8 @@ export default function StoreScreen() {
   }
 
   return (
-    <View style={[styles.screen, { backgroundColor: theme.bgPrimary }]}>
+    <ImageBackground source={isDark ? BG.dark : BG.light} style={styles.screen} resizeMode="cover">
+      <View style={[StyleSheet.absoluteFillObject, { backgroundColor: overlayColor(isDark, 0.48) }]} />
 
       {/* Top Bar */}
       <View style={[styles.topBar, { backgroundColor: theme.bgNav }]}>
@@ -169,7 +172,7 @@ export default function StoreScreen() {
         </View>
       )}
 
-    </View>
+    </ImageBackground>
   );
 }
 

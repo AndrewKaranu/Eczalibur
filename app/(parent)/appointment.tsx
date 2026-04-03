@@ -4,6 +4,7 @@ import * as Sharing from 'expo-sharing';
 import {
   ActivityIndicator,
   Alert,
+  ImageBackground,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -14,13 +15,16 @@ import {
   View,
 } from 'react-native';
 import { router } from 'expo-router';
+import { useTheme } from '@/context/ThemeContext';
 import { useAppStore } from '@/store/useAppStore';
+import { BG, overlayColor } from '@/constants/backgrounds';
 
 function isValidDate(s: string): boolean {
   return /^\d{4}-\d{2}-\d{2}$/.test(s) && !isNaN(Date.parse(s));
 }
 
 export default function AppointmentScreen() {
+  const { isDark } = useTheme();
   const { isHydrated, profile, flareLogs } = useAppStore();
 
   const [appointmentDate, setAppointmentDate] = useState('');
@@ -86,10 +90,12 @@ export default function AppointmentScreen() {
   }
 
   return (
-    <KeyboardAvoidingView
-      style={styles.screen}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
+    <ImageBackground source={isDark ? BG.dark : BG.light} style={styles.screen} resizeMode="cover">
+      <View style={[StyleSheet.absoluteFillObject, { backgroundColor: overlayColor(isDark, 0.50) }]} />
+      <KeyboardAvoidingView
+        style={styles.innerScreen}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
       <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
         {/* Header */}
         <View style={styles.headerRow}>
@@ -162,12 +168,14 @@ export default function AppointmentScreen() {
           </TouchableOpacity>
         )}
       </ScrollView>
-    </KeyboardAvoidingView>
+      </KeyboardAvoidingView>
+    </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: '#1a1a2e' },
+  screen: { flex: 1 },
+  innerScreen: { flex: 1 },
   loadingScreen: {
     flex: 1,
     backgroundColor: '#1a1a2e',

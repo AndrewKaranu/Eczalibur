@@ -1,6 +1,7 @@
 import * as SecureStore from 'expo-secure-store';
 import { useState } from 'react';
 import {
+  ImageBackground,
   Modal,
   Platform,
   StyleSheet,
@@ -8,6 +9,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { BG } from '@/constants/backgrounds';
 
 const PIN_KEY = 'eczcalibur_child_pin';
 const PIN_LENGTH = 4;
@@ -69,7 +71,17 @@ export function PinVerifyModal({ visible, prompt, onSuccess, onCancel }: PinVeri
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={handleCancel}>
       <View style={styles.overlay}>
-        <View style={styles.sheet}>
+        <ImageBackground
+          source={BG.onboarding}
+          style={styles.sheet}
+          resizeMode="cover"
+          imageStyle={{ borderTopLeftRadius: 24, borderTopRightRadius: 24 }}
+        >
+          <View style={[StyleSheet.absoluteFillObject, {
+            backgroundColor: 'rgba(5,8,5,0.58)',
+            borderTopLeftRadius: 24,
+            borderTopRightRadius: 24,
+          }]} />
           <Text style={styles.title}>🔒 Parent Mode</Text>
           <Text style={styles.prompt}>
             {prompt ?? 'Enter your PIN to switch to Parent View'}
@@ -102,7 +114,7 @@ export function PinVerifyModal({ visible, prompt, onSuccess, onCancel }: PinVeri
           <TouchableOpacity style={styles.cancelBtn} onPress={handleCancel}>
             <Text style={styles.cancelText}>Cancel</Text>
           </TouchableOpacity>
-        </View>
+        </ImageBackground>
       </View>
     </Modal>
   );
@@ -115,7 +127,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   sheet: {
-    backgroundColor: '#1a1a2e',
+    backgroundColor: 'transparent',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     alignItems: 'center',

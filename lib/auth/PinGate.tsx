@@ -15,11 +15,13 @@ const storage = {
 };
 import {
   ActivityIndicator,
+  ImageBackground,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
+import { BG, overlayColor } from '@/constants/backgrounds';
 
 const PIN_KEY = 'eczcalibur_child_pin';
 const PIN_LENGTH = 4;
@@ -98,9 +100,10 @@ export function PinGate({ children }: PinGateProps) {
 
   if (status === 'loading') {
     return (
-      <View style={styles.container}>
+      <ImageBackground source={BG.onboarding} style={styles.container} resizeMode="cover">
+        <View style={[StyleSheet.absoluteFillObject, { backgroundColor: overlayColor(true, 0.55) }]} />
         <ActivityIndicator color="#f5c842" size="large" />
-      </View>
+      </ImageBackground>
     );
   }
 
@@ -116,7 +119,8 @@ export function PinGate({ children }: PinGateProps) {
     : 'Enter your PIN';
 
   return (
-    <View style={styles.container}>
+    <ImageBackground source={BG.onboarding} style={styles.container} resizeMode="cover">
+      <View style={[StyleSheet.absoluteFillObject, { backgroundColor: overlayColor(true, 0.55) }]} />
       <Text style={styles.title}>🗡️ Eczcalibur</Text>
       <Text style={styles.label}>{label}</Text>
 
@@ -146,14 +150,14 @@ export function PinGate({ children }: PinGateProps) {
           </TouchableOpacity>
         ))}
       </View>
-    </View>
+    </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1a1a2e',
+    backgroundColor: 'transparent',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 24,

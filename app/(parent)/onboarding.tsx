@@ -8,6 +8,7 @@ import { useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  ImageBackground,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -18,6 +19,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { BG } from '@/constants/backgrounds';
 import * as ExpoCrypto from 'expo-crypto';
 import { BodyMap } from '@/components/parent/BodyMap';
 import { OnboardingStep } from '@/components/parent/OnboardingStep';
@@ -215,7 +217,9 @@ export default function OnboardingScreen() {
   }
 
   return (
-    <KeyboardAvoidingView style={styles.screen} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+    <ImageBackground source={BG.onboarding} style={styles.screen} resizeMode="cover">
+      <View style={[StyleSheet.absoluteFillObject, { backgroundColor: 'rgba(5,8,5,0.58)' }]} />
+      <KeyboardAvoidingView style={styles.innerScreen} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
         {/* ── Step 1: Parent info ── */}
         {step === 1 && (
@@ -488,11 +492,13 @@ export default function OnboardingScreen() {
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
+    </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: '#1a1a2e' },
+  screen: { flex: 1 },
+  innerScreen: { flex: 1 },
   scroll: { flexGrow: 1, paddingBottom: 40 },
   label: { color: '#aaa', fontSize: 13, fontWeight: '600', marginBottom: 6, marginTop: 16 },
   input: {

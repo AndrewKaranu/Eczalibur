@@ -15,15 +15,12 @@ import {
 import { useTheme } from '@/context/ThemeContext';
 import { useAppStore } from '@/store/useAppStore';
 import { PinVerifyModal } from '@/lib/auth/PinVerifyModal';
+import { QUEST_BG, overlayColor } from '@/constants/backgrounds';
 import type { Zone } from '@/lib/types';
 
 // ─── Assets ───────────────────────────────────────────────────────────────────
 
-const HERO_IMAGES = {
-  male:    require('@/assets/images/hero-male.jpg'),
-  female:  require('@/assets/images/hero-female.jpg'),
-  neutral: require('@/assets/images/hero-male.jpg'),
-};
+// Hero images are now derived from QUEST_BG (mode-aware, see component below)
 
 // ─── Fallback quest steps ─────────────────────────────────────────────────────
 
@@ -74,7 +71,8 @@ export default function ChildHome() {
   const gender       = (profile?.gender ?? 'neutral') as 'male' | 'female' | 'neutral';
   const steps        = profile?.actionPlan ? profile.actionPlan[zone].childInstructions : FALLBACK_STEPS[zone];
   const level        = Math.max(1, Math.floor(flareLogs.length / 3) + 1);
-  const heroImage    = HERO_IMAGES[gender];
+  const questBg      = QUEST_BG[`${gender}-${isDark ? 'dark' : 'light'}`];
+  const heroImage    = questBg;  // mode-aware: dark/light variant of the character
   const completedSet = new Set(questCompletions[zone] ?? []);
 
   function handleComplete(index: number) {
@@ -85,7 +83,8 @@ export default function ChildHome() {
   }
 
   return (
-    <View style={[styles.screen, { backgroundColor: theme.bgPrimary }]}>
+    <ImageBackground source={questBg} style={styles.screen} resizeMode="cover">
+      <View style={[StyleSheet.absoluteFillObject, { backgroundColor: overlayColor(isDark, 0.35) }]} />
 
       {/* ── Top bar — sits above the hero image ── */}
       <View style={[styles.topBar, { backgroundColor: theme.bgNav }]}>
@@ -108,7 +107,7 @@ export default function ChildHome() {
 
       {/* ── Quest section (scrollable) ── */}
       <ScrollView
-        style={{ flex: 1, backgroundColor: theme.bgPrimary }}
+        style={{ flex: 1 }}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
@@ -172,7 +171,7 @@ export default function ChildHome() {
       </ScrollView>
 
       {/* ── FLARE-UP button (fixed footer) ── */}
-      <View style={[styles.flareWrapper, { backgroundColor: theme.bgPrimary }]}>
+      <View style={[styles.flareWrapper, { backgroundColor: isDark ? 'rgba(2,11,2,0.85)' : 'rgba(242,249,234,0.85)' }]}>
         <TouchableOpacity
           style={[styles.flareButton, { backgroundColor: theme.error, shadowColor: theme.errorDark }]}
           onPress={() => router.push('/(child)/emergency')}
@@ -290,7 +289,7 @@ export default function ChildHome() {
         onSuccess={() => { setShowParentPin(false); router.replace('/(parent)/dashboard'); }}
         onCancel={() => setShowParentPin(false)}
       />
-    </View>
+    </ImageBackground>
   );
 }
 

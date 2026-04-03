@@ -3,6 +3,7 @@ import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
   Image,
+  ImageBackground,
   ScrollView,
   StyleSheet,
   Text,
@@ -10,6 +11,7 @@ import {
   View,
 } from 'react-native';
 import { useTheme } from '@/context/ThemeContext';
+import { BG, overlayColor } from '@/constants/backgrounds';
 import { useAppStore } from '@/store/useAppStore';
 import type { BodyArea, FlareLog } from '@/lib/types';
 
@@ -51,7 +53,7 @@ function formatCountdown(ms: number): string {
 // ─── Screen ───────────────────────────────────────────────────────────────────
 
 export default function LogScreen() {
-  const { theme } = useTheme();
+  const { theme, isDark } = useTheme();
   const { profile, points, flareLogs, currentZone, addFlareLog, awardPoints } = useAppStore();
 
   const zone           = currentZone();
@@ -143,7 +145,8 @@ export default function LogScreen() {
 
   if (isAtLimit && step !== 'done') {
     return (
-      <View style={[styles.screen, { backgroundColor: theme.bgPrimary }]}>
+      <ImageBackground source={isDark ? BG.dark : BG.light} style={styles.screen} resizeMode="cover">
+        <View style={[StyleSheet.absoluteFillObject, { backgroundColor: overlayColor(isDark, 0.48) }]} />
         <View style={styles.centreContainer}>
           <Text style={styles.bigEmoji}>📋</Text>
           <Text style={[styles.guardTitle, { color: theme.gold }]}>Daily Limit Reached</Text>
@@ -156,7 +159,7 @@ export default function LogScreen() {
             ))}
           </View>
         </View>
-      </View>
+      </ImageBackground>
     );
   }
 
@@ -165,7 +168,8 @@ export default function LogScreen() {
   if (isOnCooldown && step !== 'done') {
     const pct = 1 - timeLeft / COOLDOWN_MS;
     return (
-      <View style={[styles.screen, { backgroundColor: theme.bgPrimary }]}>
+      <ImageBackground source={isDark ? BG.dark : BG.light} style={styles.screen} resizeMode="cover">
+        <View style={[StyleSheet.absoluteFillObject, { backgroundColor: overlayColor(isDark, 0.48) }]} />
         <View style={styles.centreContainer}>
           <Text style={styles.bigEmoji}>⏳</Text>
           <Text style={[styles.guardTitle, { color: theme.gold }]}>Next log available in</Text>
@@ -182,7 +186,7 @@ export default function LogScreen() {
             Logs today: {todayCount} / {MAX_DAILY}
           </Text>
         </View>
-      </View>
+      </ImageBackground>
     );
   }
 
@@ -190,7 +194,8 @@ export default function LogScreen() {
 
   if (step === 'done') {
     return (
-      <View style={[styles.screen, { backgroundColor: theme.bgPrimary }]}>
+      <ImageBackground source={isDark ? BG.dark : BG.light} style={styles.screen} resizeMode="cover">
+        <View style={[StyleSheet.absoluteFillObject, { backgroundColor: overlayColor(isDark, 0.48) }]} />
         <View style={styles.centreContainer}>
           <Text style={styles.bigEmoji}>🪙</Text>
           <Text style={[styles.doneTitle, { color: theme.gold }]}>Quest Logged!</Text>
@@ -209,7 +214,7 @@ export default function LogScreen() {
             <Text style={[styles.doneButtonText, { color: theme.bgNav }]}>Back to Quests</Text>
           </TouchableOpacity>
         </View>
-      </View>
+      </ImageBackground>
     );
   }
 
@@ -217,7 +222,8 @@ export default function LogScreen() {
 
   if (step === 1) {
     return (
-      <View style={[styles.screen, { backgroundColor: theme.bgPrimary }]}>
+      <ImageBackground source={isDark ? BG.dark : BG.light} style={styles.screen} resizeMode="cover">
+        <View style={[StyleSheet.absoluteFillObject, { backgroundColor: overlayColor(isDark, 0.48) }]} />
         <ScrollView contentContainerStyle={styles.scroll}>
           <Text style={[styles.stepLabel, { color: theme.textMuted }]}>STEP 1 OF 3</Text>
           <Text style={[styles.title, { color: theme.gold }]}>How does your skin feel?</Text>
@@ -264,7 +270,7 @@ export default function LogScreen() {
             <Text style={[styles.backLinkText, { color: theme.textMuted }]}>← Cancel</Text>
           </TouchableOpacity>
         </ScrollView>
-      </View>
+      </ImageBackground>
     );
   }
 
@@ -272,7 +278,8 @@ export default function LogScreen() {
 
   if (step === 2) {
     return (
-      <View style={[styles.screen, { backgroundColor: theme.bgPrimary }]}>
+      <ImageBackground source={isDark ? BG.dark : BG.light} style={styles.screen} resizeMode="cover">
+        <View style={[StyleSheet.absoluteFillObject, { backgroundColor: overlayColor(isDark, 0.48) }]} />
         <ScrollView contentContainerStyle={styles.scroll}>
           <Text style={[styles.stepLabel, { color: theme.textMuted }]}>STEP 2 OF 3</Text>
           <Text style={[styles.title, { color: theme.gold }]}>Where is it bothering you?</Text>
@@ -319,7 +326,7 @@ export default function LogScreen() {
             <Text style={[styles.backLinkText, { color: theme.textMuted }]}>← Back</Text>
           </TouchableOpacity>
         </ScrollView>
-      </View>
+      </ImageBackground>
     );
   }
 
@@ -329,7 +336,8 @@ export default function LogScreen() {
   const earned     = 10 + photoUris.length * 5;
 
   return (
-    <View style={[styles.screen, { backgroundColor: theme.bgPrimary }]}>
+    <ImageBackground source={isDark ? BG.dark : BG.light} style={styles.screen} resizeMode="cover">
+      <View style={[StyleSheet.absoluteFillObject, { backgroundColor: overlayColor(isDark, 0.48) }]} />
       <ScrollView contentContainerStyle={styles.scroll}>
         <Text style={[styles.stepLabel, { color: theme.textMuted }]}>STEP 3 OF 3</Text>
         <Text style={[styles.title, { color: theme.gold }]}>Add photos? (+5 each)</Text>
@@ -392,7 +400,7 @@ export default function LogScreen() {
           <Text style={[styles.backLinkText, { color: theme.textMuted }]}>← Back</Text>
         </TouchableOpacity>
       </ScrollView>
-    </View>
+    </ImageBackground>
   );
 }
 

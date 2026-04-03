@@ -1,7 +1,8 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { router, Redirect } from 'expo-router';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, ImageBackground, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useTheme } from '@/context/ThemeContext';
+import { BG, overlayColor } from '@/constants/backgrounds';
 import { useAppStore } from '@/store/useAppStore';
 import type { RedemptionRequest, Zone } from '@/lib/types';
 
@@ -39,10 +40,12 @@ export default function ParentDashboard() {
   const zc = ZONE_CONFIG[zone];
 
   return (
-    <ScrollView
-      style={[styles.container, { backgroundColor: theme.bgPrimary }]}
-      contentContainerStyle={styles.scrollContent}
-    >
+    <ImageBackground source={isDark ? BG.dark : BG.light} style={styles.container} resizeMode="cover">
+      <View style={[StyleSheet.absoluteFillObject, { backgroundColor: overlayColor(isDark, 0.50) }]} />
+      <ScrollView
+        style={styles.scrollFill}
+        contentContainerStyle={styles.scrollContent}
+      >
       {/* Top Bar */}
       <View style={[styles.topBar, { backgroundColor: theme.bgNav }]}>
         <TouchableOpacity onPress={toggleTheme}>
@@ -119,13 +122,15 @@ export default function ParentDashboard() {
         <Text style={[styles.childViewText, { color: theme.green }]}>Switch to Child View</Text>
       </TouchableOpacity>
 
-    </ScrollView>
+      </ScrollView>
+    </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
   loading: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   container: { flex: 1 },
+  scrollFill: { flex: 1 },
   scrollContent: { paddingBottom: 40, gap: 16 },
 
   topBar: {

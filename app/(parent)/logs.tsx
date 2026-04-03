@@ -1,7 +1,9 @@
 import { useState } from 'react';
-import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { FlatList, ImageBackground, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { router } from 'expo-router';
+import { useTheme } from '@/context/ThemeContext';
 import { useAppStore } from '@/store/useAppStore';
+import { BG, overlayColor } from '@/constants/backgrounds';
 import type { FlareLog, Zone } from '@/lib/types';
 
 const ZONE_CONFIG: Record<Zone, { label: string; color: string; bg: string; border: string }> = {
@@ -42,6 +44,7 @@ function LogRow({ log }: { log: FlareLog }) {
 }
 
 export default function LogsScreen() {
+  const { isDark } = useTheme();
   const { flareLogs } = useAppStore();
   const [activeFilter, setActiveFilter] = useState<Filter>('all');
 
@@ -57,7 +60,8 @@ export default function LogsScreen() {
   ];
 
   return (
-    <View style={styles.screen}>
+    <ImageBackground source={isDark ? BG.dark : BG.light} style={styles.screen} resizeMode="cover">
+      <View style={[StyleSheet.absoluteFillObject, { backgroundColor: overlayColor(isDark, 0.50) }]} />
       {/* Header */}
       <View style={styles.headerRow}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
@@ -99,14 +103,13 @@ export default function LogsScreen() {
         }
         showsVerticalScrollIndicator={false}
       />
-    </View>
+    </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: '#1a1a2e',
   },
   headerRow: {
     flexDirection: 'row',

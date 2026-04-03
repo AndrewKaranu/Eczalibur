@@ -5,6 +5,7 @@ import { useState } from 'react';
 import {
   Alert,
   FlatList,
+  ImageBackground,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -17,6 +18,7 @@ import {
   View,
 } from 'react-native';
 import { useTheme } from '@/context/ThemeContext';
+import { BG, overlayColor } from '@/constants/backgrounds';
 import { useAppStore } from '@/store/useAppStore';
 import type { Prize } from '@/lib/types';
 
@@ -137,7 +139,7 @@ function PrizeModal({ visible, initial, onSave, onClose, theme }: PrizeModalProp
 
 export default function SettingsScreen() {
   const { signOut } = useAuth();
-  const { theme }   = useTheme();
+  const { theme, isDark }   = useTheme();
   const { prizes, addPrize, updatePrize, removePrize, reset, resetDailyLogs } = useAppStore();
 
   const [editTarget, setEditTarget] = useState<Prize | null | 'new'>('new');
@@ -209,7 +211,8 @@ export default function SettingsScreen() {
   }
 
   return (
-    <View style={[styles.screen, { backgroundColor: theme.bgPrimary }]}>
+    <ImageBackground source={isDark ? BG.dark : BG.light} style={styles.screen} resizeMode="cover">
+      <View style={[StyleSheet.absoluteFillObject, { backgroundColor: overlayColor(isDark, 0.50) }]} />
       {/* Top bar */}
       <View style={[styles.topBar, { backgroundColor: theme.bgNav }]}>
         <TouchableOpacity onPress={() => router.back()}>
@@ -341,7 +344,7 @@ export default function SettingsScreen() {
         onClose={() => setModalVisible(false)}
         theme={theme}
       />
-    </View>
+    </ImageBackground>
   );
 }
 

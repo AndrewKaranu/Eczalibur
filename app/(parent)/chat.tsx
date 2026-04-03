@@ -11,10 +11,12 @@ import {
   View,
 } from 'react-native';
 import { router } from 'expo-router';
+import { useTheme } from '@/context/ThemeContext';
 import { useAppStore } from '@/store/useAppStore';
 import type { ChatMessage } from '@/lib/types';
 
 export default function ChatScreen() {
+  const { theme, isDark } = useTheme();
   const { isHydrated, profile, flareLogs } = useAppStore();
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -30,8 +32,8 @@ export default function ChatScreen() {
 
   if (!isHydrated) {
     return (
-      <View style={styles.loadingScreen}>
-        <ActivityIndicator color="#FFD700" size="large" />
+      <View style={[styles.loadingScreen, { backgroundColor: theme.bgPrimary }]}>
+        <ActivityIndicator color={theme.gold} size="large" />
       </View>
     );
   }
@@ -83,22 +85,22 @@ export default function ChatScreen() {
 
   return (
     <KeyboardAvoidingView
-      style={styles.screen}
+      style={[styles.screen, { backgroundColor: theme.bgPrimary }]}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
     >
       {/* Header */}
-      <View style={styles.headerRow}>
+      <View style={[styles.headerRow, { backgroundColor: theme.bgNav }]}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-          <Text style={styles.backText}>← Back</Text>
+          <Text style={[styles.backText, { color: theme.gold }]}>← Back</Text>
         </TouchableOpacity>
-        <Text style={styles.title}>Claude Chat</Text>
+        <Text style={[styles.title, { color: theme.textPrimary }]}>Claude Chat</Text>
         <View style={styles.headerSpacer} />
       </View>
 
       {/* Privacy banner */}
-      <View style={styles.disclosureBanner}>
-        <Text style={styles.disclosureText}>
+      <View style={[styles.disclosureBanner, { backgroundColor: theme.bgCard, borderColor: theme.border }]}>
+        <Text style={[styles.disclosureText, { color: theme.textMuted }]}>
           🔒 Your data is shared with Claude only for this conversation. Not stored on any server.
         </Text>
       </View>
@@ -113,13 +115,17 @@ export default function ChatScreen() {
           <View
             style={[
               styles.bubble,
-              item.role === 'user' ? styles.userBubble : styles.assistantBubble,
+              item.role === 'user'
+                ? { backgroundColor: theme.gold, alignSelf: 'flex-end' as const }
+                : { backgroundColor: theme.bgCard, alignSelf: 'flex-start' as const, borderWidth: 1, borderColor: theme.border },
             ]}
           >
             <Text
               style={[
                 styles.bubbleText,
-                item.role === 'user' ? styles.userBubbleText : styles.assistantBubbleText,
+                item.role === 'user'
+                  ? { color: theme.bgNav, fontWeight: '600' as const }
+                  : { color: theme.textPrimary },
               ]}
             >
               {item.content}
@@ -128,11 +134,11 @@ export default function ChatScreen() {
         )}
         ListEmptyComponent={
           <View style={styles.emptyChat}>
-            <Text style={styles.emptyChatText}>
+            <Text style={[styles.emptyChatText, { color: theme.textMuted }]}>
               Ask Claude anything about{'\n'}
               {profile?.name ?? 'your child'}'s eczema management.
             </Text>
-            <Text style={styles.emptyChatHint}>
+            <Text style={[styles.emptyChatHint, { color: theme.textMuted }]}>
               Try: "Why might she flare more on weekends?" or "What should I ask at the next appointment?"
             </Text>
           </View>
@@ -146,19 +152,19 @@ export default function ChatScreen() {
       {/* Loading indicator */}
       {loading && (
         <View style={styles.loadingRow}>
-          <ActivityIndicator color="#FFD700" size="small" />
-          <Text style={styles.loadingText}>Claude is thinking…</Text>
+          <ActivityIndicator color={theme.gold} size="small" />
+          <Text style={[styles.loadingText, { color: theme.textMuted }]}>Claude is thinking…</Text>
         </View>
       )}
 
       {/* Input row */}
-      <View style={styles.inputRow}>
+      <View style={[styles.inputRow, { backgroundColor: theme.bgNav, borderColor: theme.border }]}>
         <TextInput
-          style={[styles.textInput, loading && styles.inputDisabled]}
+          style={[styles.textInput, { backgroundColor: theme.bgCard, borderColor: theme.border, color: theme.textPrimary }, loading && styles.inputDisabled]}
           value={input}
           onChangeText={setInput}
           placeholder="Ask a question…"
-          placeholderTextColor="#555"
+          placeholderTextColor={theme.textMuted}
           multiline
           editable={!loading}
           returnKeyType="send"
@@ -166,11 +172,11 @@ export default function ChatScreen() {
           onSubmitEditing={handleSend}
         />
         <TouchableOpacity
-          style={[styles.sendBtn, (!input.trim() || loading) && styles.sendBtnDisabled]}
+          style={[styles.sendBtn, { backgroundColor: theme.gold }, (!input.trim() || loading) && styles.sendBtnDisabled]}
           onPress={handleSend}
           disabled={!input.trim() || loading}
         >
-          <Text style={styles.sendBtnText}>Send</Text>
+          <Text style={[styles.sendBtnText, { color: theme.bgNav }]}>Send</Text>
         </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>
@@ -178,38 +184,29 @@ export default function ChatScreen() {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: '#1a1a2e' },
-  loadingScreen: {
-    flex: 1,
-    backgroundColor: '#1a1a2e',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+  screen: { flex: 1 },
+  loadingScreen: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingTop: 56,
     paddingHorizontal: 20,
     paddingBottom: 12,
+    shadowColor: '#000',
+    shadowOpacity: 0.3,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 4,
   },
   backBtn: { paddingRight: 12, paddingVertical: 4 },
-  backText: { color: '#FFD700', fontSize: 15, fontWeight: '600' },
-  title: {
-    flex: 1,
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: 'bold',
-    textAlign: 'center',
-  },
+  backText: { fontSize: 15, fontWeight: '600' },
+  title: { flex: 1, fontSize: 18, fontWeight: 'bold', textAlign: 'center' },
   headerSpacer: { width: 48 },
   disclosureBanner: {
-    backgroundColor: '#1e1e35',
     borderBottomWidth: 1,
-    borderColor: '#3a3a5e',
     paddingHorizontal: 20,
     paddingVertical: 10,
   },
-  disclosureText: { color: '#888', fontSize: 11, lineHeight: 16 },
+  disclosureText: { fontSize: 11, lineHeight: 16 },
   messageList: { flex: 1 },
   listContent: { paddingVertical: 12 },
   emptyContainer: { flex: 1 },
@@ -221,20 +218,8 @@ const styles = StyleSheet.create({
     paddingTop: 60,
     gap: 12,
   },
-  emptyChatText: {
-    color: '#aaa',
-    fontSize: 16,
-    textAlign: 'center',
-    lineHeight: 24,
-    fontWeight: '600',
-  },
-  emptyChatHint: {
-    color: '#555',
-    fontSize: 13,
-    textAlign: 'center',
-    lineHeight: 20,
-    fontStyle: 'italic',
-  },
+  emptyChatText: { fontSize: 16, textAlign: 'center', lineHeight: 24, fontWeight: '600' },
+  emptyChatHint: { fontSize: 13, textAlign: 'center', lineHeight: 20, fontStyle: 'italic' },
   bubble: {
     maxWidth: '80%',
     borderRadius: 14,
@@ -242,19 +227,7 @@ const styles = StyleSheet.create({
     marginVertical: 4,
     marginHorizontal: 16,
   },
-  userBubble: {
-    backgroundColor: '#FFD700',
-    alignSelf: 'flex-end',
-  },
-  assistantBubble: {
-    backgroundColor: '#2a2a3e',
-    alignSelf: 'flex-start',
-    borderWidth: 1,
-    borderColor: '#3a3a5e',
-  },
   bubbleText: { fontSize: 14, lineHeight: 20 },
-  userBubbleText: { color: '#1a1a2e', fontWeight: '600' },
-  assistantBubbleText: { color: '#fff' },
   loadingRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -262,7 +235,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 8,
   },
-  loadingText: { color: '#aaa', fontSize: 13, fontStyle: 'italic' },
+  loadingText: { fontSize: 13, fontStyle: 'italic' },
   inputRow: {
     flexDirection: 'row',
     alignItems: 'flex-end',
@@ -271,28 +244,18 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingBottom: Platform.OS === 'ios' ? 28 : 16,
     borderTopWidth: 1,
-    borderColor: '#3a3a5e',
-    backgroundColor: '#1a1a2e',
   },
   textInput: {
     flex: 1,
-    backgroundColor: '#2a2a3e',
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: '#3a3a5e',
     paddingHorizontal: 16,
     paddingVertical: 10,
-    color: '#fff',
     fontSize: 15,
     maxHeight: 120,
   },
   inputDisabled: { opacity: 0.5 },
-  sendBtn: {
-    backgroundColor: '#FFD700',
-    borderRadius: 20,
-    paddingHorizontal: 18,
-    paddingVertical: 10,
-  },
+  sendBtn: { borderRadius: 20, paddingHorizontal: 18, paddingVertical: 10 },
   sendBtnDisabled: { opacity: 0.35 },
-  sendBtnText: { color: '#1a1a2e', fontWeight: 'bold', fontSize: 14 },
+  sendBtnText: { fontWeight: 'bold', fontSize: 14 },
 });
