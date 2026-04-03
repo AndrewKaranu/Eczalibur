@@ -16,6 +16,7 @@ interface PinGateProps {
   children: React.ReactNode;
 }
 
+// Web-safe storage fallback
 async function getStoredPin(): Promise<string | null> {
   if (Platform.OS === 'web') {
     return localStorage.getItem(PIN_KEY);

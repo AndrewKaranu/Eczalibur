@@ -128,10 +128,10 @@ export default function SignInScreen() {
             <View style={styles.card}>
               <TextInput
                 style={styles.input}
-                placeholder="Email"
+                placeholder="Username"
                 placeholderTextColor="#7a5b42"
                 autoCapitalize="none"
-                keyboardType="email-address"
+                keyboardType="default"
                 value={email}
                 onChangeText={setEmail}
               />
