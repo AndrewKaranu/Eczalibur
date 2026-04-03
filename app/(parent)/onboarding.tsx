@@ -18,6 +18,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import * as ExpoCrypto from 'expo-crypto';
 import { BodyMap } from '@/components/parent/BodyMap';
 import { OnboardingStep } from '@/components/parent/OnboardingStep';
 import { fetchWeather } from '@/lib/weather';
@@ -139,7 +140,7 @@ export default function OnboardingScreen() {
   async function finishOnboarding() {
     setLoading(true);
     try {
-      const profileId = crypto.randomUUID();
+      const profileId = ExpoCrypto.randomUUID();
       const now = new Date().toISOString();
 
       await setProfile({

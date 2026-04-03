@@ -6,6 +6,9 @@
  * else in the app. AsyncStorage is only hit:
  *   - On app launch (hydration in useAppStore)
  *   - On mutations (write-through from store actions)
+ *
+ * Falls back to an in-memory Map when the AsyncStorage native module is
+ * unavailable (e.g. RN/Expo Go version mismatch during development).
  */
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -21,20 +24,40 @@ const KEYS = {
   POINTS: 'eczcalibur:points',
 } as const;
 
-// ─── Primitive helpers ────────────────────────────────────────────────────────
+// ─── Memory fallback ──────────────────────────────────────────────────────────
+
+const memStore = new Map<string, string>();
 
 async function read<T>(key: string): Promise<T | null> {
-  const raw = await AsyncStorage.getItem(key);
-  if (raw === null) return null;
-  return JSON.parse(raw) as T;
+  try {
+    const raw = await AsyncStorage.getItem(key);
+    if (raw !== null) memStore.set(key, raw); // keep in sync
+    if (raw === null) return null;
+    return JSON.parse(raw) as T;
+  } catch {
+    const raw = memStore.get(key) ?? null;
+    if (raw === null) return null;
+    return JSON.parse(raw) as T;
+  }
 }
 
 async function write<T>(key: string, value: T): Promise<void> {
-  await AsyncStorage.setItem(key, JSON.stringify(value));
+  const serialized = JSON.stringify(value);
+  memStore.set(key, serialized); // always write to memory first
+  try {
+    await AsyncStorage.setItem(key, serialized);
+  } catch {
+    // silently fall through — data is safe in memStore for this session
+  }
 }
 
 async function remove(key: string): Promise<void> {
-  await AsyncStorage.removeItem(key);
+  memStore.delete(key);
+  try {
+    await AsyncStorage.removeItem(key);
+  } catch {
+    // no-op
+  }
 }
 
 // ─── Profile ─────────────────────────────────────────────────────────────────
@@ -118,5 +141,10 @@ export async function hydrateAll(): Promise<AppState> {
 
 /** Wipe all app data (useful for sign-out / reset). */
 export async function clearAll(): Promise<void> {
-  await Promise.all(Object.values(KEYS).map((k) => AsyncStorage.removeItem(k)));
+  memStore.clear();
+  try {
+    await Promise.all(Object.values(KEYS).map((k) => AsyncStorage.removeItem(k)));
+  } catch {
+    // no-op
+  }
 }
