@@ -1,4 +1,5 @@
 import { StyleSheet, Text, View } from 'react-native';
+import { Colors, Fonts } from '@/constants/theme';
 
 interface OnboardingStepProps {
   step: number;
@@ -11,7 +12,7 @@ interface OnboardingStepProps {
 export function OnboardingStep({ step, totalSteps, title, subtitle, children }: OnboardingStepProps) {
   return (
     <View style={styles.container}>
-      {/* Progress dots */}
+      {/* Progress pixels */}
       <View style={styles.progress}>
         {Array.from({ length: totalSteps }).map((_, i) => (
           <View key={i} style={[styles.dot, i < step && styles.dotDone, i === step - 1 && styles.dotActive]} />
@@ -35,49 +36,62 @@ const styles = StyleSheet.create({
   },
   progress: {
     flexDirection: 'row',
-    gap: 8,
+    gap: 6,
     marginBottom: 20,
     justifyContent: 'center',
+    alignItems: 'center',
   },
   dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#2a2a4e',
-    borderWidth: 1,
-    borderColor: '#4a4a6e',
+    width: 12,
+    height: 12,
+    backgroundColor: Colors.cardBorder,
+    borderWidth: 2,
+    borderColor: '#000',
+    shadowColor: '#000',
+    shadowOffset: { width: 2, height: 2 },
+    shadowOpacity: 1,
+    shadowRadius: 0,
+    elevation: 0,
   },
   dotDone: {
-    backgroundColor: '#4a4a8e',
-    borderColor: '#6a6aae',
+    backgroundColor: Colors.primary,
   },
   dotActive: {
-    backgroundColor: '#FFD700',
-    borderColor: '#FFD700',
-    width: 24,
-    borderRadius: 4,
+    backgroundColor: Colors.gold,
+    width: 16,
+    height: 16,
   },
   stepLabel: {
-    color: '#FFD700',
+    fontFamily: Fonts.pixelBold,
+    color: '#fff',
     fontSize: 10,
-    fontWeight: '700',
-    letterSpacing: 2,
     textAlign: 'center',
     marginBottom: 8,
+    textShadowColor: '#000',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 0,
   },
   title: {
-    color: '#ffffff',
-    fontSize: 22,
-    fontWeight: 'bold',
+    fontFamily: Fonts.pixelBold,
+    color: '#fff',
+    fontSize: 16,
     textAlign: 'center',
-    marginBottom: 6,
+    marginBottom: 12,
+    lineHeight: 24,
+    textShadowColor: '#000',
+    textShadowOffset: { width: 2, height: 2 },
+    textShadowRadius: 0,
   },
   subtitle: {
-    color: '#aaa',
-    fontSize: 14,
+    fontFamily: Fonts.pixel,
+    color: '#ddd',
+    fontSize: 18,
     textAlign: 'center',
     marginBottom: 20,
-    lineHeight: 20,
+    lineHeight: 24,
+    textShadowColor: '#000',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 0,
   },
   content: {
     flex: 1,

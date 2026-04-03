@@ -1,18 +1,34 @@
 import * as SecureStore from 'expo-secure-store';
 import { useEffect, useState } from 'react';
 import {
-  ActivityIndicator,
+  Platform,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
+import { Fonts, Colors } from '@/constants/theme';
 
 const PIN_KEY = 'eczcalibur_child_pin';
 const PIN_LENGTH = 4;
 
 interface PinGateProps {
   children: React.ReactNode;
+}
+
+async function getStoredPin(): Promise<string | null> {
+  if (Platform.OS === 'web') {
+    return localStorage.getItem(PIN_KEY);
+  }
+  return await SecureStore.getItemAsync(PIN_KEY);
+}
+
+async function setStoredPin(pin: string): Promise<void> {
+  if (Platform.OS === 'web') {
+    localStorage.setItem(PIN_KEY, pin);
+    return;
+  }
+  await SecureStore.setItemAsync(PIN_KEY, pin);
 }
 
 export function PinGate({ children }: PinGateProps) {
@@ -24,7 +40,7 @@ export function PinGate({ children }: PinGateProps) {
 
   useEffect(() => {
     async function checkPin() {
-      const stored = await SecureStore.getItemAsync(PIN_KEY);
+      const stored = await getStoredPin();
       setStatus(stored ? 'enter-pin' : 'set-pin');
     }
     checkPin();
@@ -69,7 +85,7 @@ export function PinGate({ children }: PinGateProps) {
   }
 
   async function verifyPin(input: string) {
-    const stored = await SecureStore.getItemAsync(PIN_KEY);
+    const stored = await getStoredPin();
     if (input === stored) {
       setStatus('unlocked');
     } else {
@@ -79,14 +95,14 @@ export function PinGate({ children }: PinGateProps) {
   }
 
   async function savePin(pin: string) {
-    await SecureStore.setItemAsync(PIN_KEY, pin);
+    await setStoredPin(pin);
     setStatus('unlocked');
   }
 
   if (status === 'loading') {
     return (
       <View style={styles.container}>
-        <ActivityIndicator color="#f5c842" size="large" />
+        <Text style={{ fontFamily: Fonts.pixelBold, color: '#fff', fontSize: 16 }}>LOADING...</Text>
       </View>
     );
   }
@@ -140,21 +156,28 @@ export function PinGate({ children }: PinGateProps) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1a1a2e',
+    backgroundColor: 'transparent',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 24,
   },
   title: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#f5c842',
+    fontFamily: Fonts.pixelBold,
+    fontSize: 24,
+    color: '#fff',
+    textShadowColor: '#000',
+    textShadowOffset: { width: 2, height: 2 },
+    textShadowRadius: 0,
   },
   label: {
-    fontSize: 16,
-    color: '#ccc',
+    fontFamily: Fonts.pixel,
+    fontSize: 20,
+    color: '#fff',
     textAlign: 'center',
     paddingHorizontal: 32,
+    textShadowColor: '#000',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 0,
   },
   dots: {
     flexDirection: 'row',
@@ -163,42 +186,55 @@ const styles = StyleSheet.create({
   dot: {
     width: 16,
     height: 16,
-    borderRadius: 8,
     borderWidth: 2,
-    borderColor: '#f5c842',
-    backgroundColor: 'transparent',
+    borderColor: '#000',
+    backgroundColor: Colors.cardBorder,
+    shadowColor: '#000',
+    shadowOffset: { width: 2, height: 2 },
+    shadowOpacity: 1,
+    shadowRadius: 0,
+    elevation: 0,
   },
   dotFilled: {
-    backgroundColor: '#f5c842',
+    backgroundColor: Colors.gold,
   },
   error: {
-    color: '#ff6b6b',
-    fontSize: 14,
+    fontFamily: Fonts.pixelBold,
+    color: Colors.healthRed,
+    fontSize: 12,
+    textShadowColor: '#000',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 0,
   },
   keypad: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    width: 240,
-    gap: 12,
+    width: 260,
+    gap: 16,
     justifyContent: 'center',
   },
   key: {
     width: 64,
     height: 64,
-    borderRadius: 32,
-    backgroundColor: '#2a2a3e',
+    backgroundColor: Colors.card,
+    borderWidth: 4,
+    borderColor: Colors.cardBorder,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: '#3a3a5e',
+    shadowColor: '#000',
+    shadowOffset: { width: 4, height: 4 },
+    shadowOpacity: 1,
+    shadowRadius: 0,
+    elevation: 0,
   },
   keyEmpty: {
     backgroundColor: 'transparent',
-    borderColor: 'transparent',
+    borderWidth: 0,
+    shadowOpacity: 0,
   },
   keyText: {
-    color: '#fff',
-    fontSize: 22,
-    fontWeight: '600',
+    fontFamily: Fonts.pixelBold,
+    fontSize: 24,
+    color: Colors.text,
   },
 });

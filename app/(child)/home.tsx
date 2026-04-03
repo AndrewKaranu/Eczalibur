@@ -3,6 +3,8 @@ import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-nati
 import { useAppStore } from '@/store/useAppStore';
 import type { Zone } from '@/lib/types';
 
+import { Colors, Fonts } from '@/constants/theme';
+
 const ZONE_CONFIG: Record<Zone, { bg: string; border: string; label: string; emoji: string; questTitle: string }> = {
   green: {
     bg: '#0d2b0d',
@@ -42,7 +44,7 @@ export default function ChildHome() {
   const childName = profile?.name ?? 'Hero';
 
   return (
-    <View style={[styles.screen, { backgroundColor: config.bg }]}>
+    <View style={styles.screen}>
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
 
         {/* Header */}
@@ -115,63 +117,60 @@ export default function ChildHome() {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1 },
-  scroll: { paddingBottom: 100, paddingHorizontal: 20, paddingTop: 56 },
+  screen: { flex: 1, backgroundColor: 'transparent' },
+  scroll: { flexGrow: 1, paddingBottom: 100, paddingHorizontal: 20, paddingTop: 56, backgroundColor: 'transparent' },
 
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
-  greeting: { color: '#FFD700', fontSize: 18, fontWeight: 'bold' },
-  pointsBadge: { backgroundColor: '#2a2a1a', borderRadius: 20, paddingHorizontal: 14, paddingVertical: 6, borderWidth: 1, borderColor: '#FFD700' },
-  pointsText: { color: '#FFD700', fontWeight: 'bold', fontSize: 14 },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 },
+  greeting: { fontFamily: Fonts.pixelBold, color: '#fff', fontSize: 16, flexShrink: 1, textShadowColor: '#000', textShadowOffset: {width: 2, height: 2}, textShadowRadius: 0 },
+  pointsBadge: { backgroundColor: Colors.card, paddingHorizontal: 16, paddingVertical: 10, borderWidth: 4, borderColor: Colors.cardBorder, shadowColor: '#000', shadowOffset: {width: 4, height: 4}, shadowOpacity: 1, shadowRadius: 0, elevation: 0 },
+  pointsText: { fontFamily: Fonts.pixelBold, color: Colors.text, fontSize: 12 },
 
   zoneBanner: {
-    borderWidth: 2,
-    borderRadius: 16,
+    borderWidth: 6,
     padding: 20,
     alignItems: 'center',
-    marginBottom: 24,
-    gap: 6,
-    backgroundColor: 'rgba(0,0,0,0.3)',
+    marginBottom: 28,
+    gap: 8,
+    backgroundColor: Colors.card,
+    shadowColor: '#000', shadowOffset: {width: 4, height: 4}, shadowOpacity: 1, shadowRadius: 0, elevation: 0
   },
-  zoneEmoji: { fontSize: 40 },
-  zoneLabel: { fontSize: 11, fontWeight: '800', letterSpacing: 3 },
-  zoneTitle: { color: '#fff', fontSize: 18, fontWeight: 'bold', textAlign: 'center' },
+  zoneEmoji: { fontSize: 56 },
+  zoneLabel: { fontFamily: Fonts.pixelBold, fontSize: 12, letterSpacing: 2, marginBottom: 8, textShadowColor: '#000', textShadowOffset: {width: 1, height: 1}, textShadowRadius: 0 },
+  zoneTitle: { fontFamily: Fonts.pixel, color: Colors.text, fontSize: 24, textAlign: 'center' },
 
-  stepsContainer: { marginBottom: 24 },
-  stepsHeader: { color: '#888', fontSize: 10, fontWeight: '700', letterSpacing: 2, marginBottom: 12 },
+  stepsContainer: { marginBottom: 28, backgroundColor: Colors.card, padding: 16, borderWidth: 4, borderColor: Colors.cardBorder, shadowColor: '#000', shadowOffset: {width: 4, height: 4}, shadowOpacity: 1, shadowRadius: 0, elevation: 0 },
+  stepsHeader: { fontFamily: Fonts.pixelBold, color: Colors.text, fontSize: 10, marginBottom: 16, opacity: 0.8 },
   stepCard: {
     flexDirection: 'row',
     gap: 12,
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    borderRadius: 10,
-    padding: 14,
-    marginBottom: 8,
-    borderLeftWidth: 3,
+    marginBottom: 12,
     alignItems: 'flex-start',
   },
-  stepNumber: { fontSize: 16, fontWeight: 'bold', width: 20 },
-  stepText: { color: '#ddd', fontSize: 14, lineHeight: 20, flex: 1 },
+  stepNumber: { fontFamily: Fonts.pixelBold, fontSize: 14, width: 20, marginTop: 4 },
+  stepText: { fontFamily: Fonts.pixel, color: Colors.text, fontSize: 22, lineHeight: 26, flex: 1 },
 
-  actions: { gap: 10, marginBottom: 20 },
-  planButton: { backgroundColor: 'rgba(255,215,0,0.15)', borderWidth: 1, borderColor: '#FFD700', borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
-  planButtonText: { color: '#FFD700', fontWeight: '600', fontSize: 14 },
-  logButton: { backgroundColor: 'rgba(74,222,128,0.15)', borderWidth: 1, borderColor: '#4ade80', borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
-  logButtonText: { color: '#4ade80', fontWeight: '600', fontSize: 14 },
-  storeButton: { backgroundColor: 'rgba(168,85,247,0.15)', borderWidth: 1, borderColor: '#a855f7', borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
-  storeButtonText: { color: '#a855f7', fontWeight: '600', fontSize: 14 },
+  actions: { gap: 16, marginBottom: 32 },
+  planButton: { backgroundColor: '#e2dabc', borderWidth: 4, borderColor: Colors.cardBorder, paddingVertical: 18, alignItems: 'center', shadowColor: '#000', shadowOffset: {width: 4, height: 4}, shadowOpacity: 1, shadowRadius: 0, elevation: 0 },
+  planButtonText: { fontFamily: Fonts.pixelBold, color: Colors.text, fontSize: 10 },
+  logButton: { backgroundColor: Colors.accent, borderWidth: 4, borderColor: Colors.cardBorder, paddingVertical: 18, alignItems: 'center', shadowColor: '#000', shadowOffset: {width: 4, height: 4}, shadowOpacity: 1, shadowRadius: 0, elevation: 0 },
+  logButtonText: { fontFamily: Fonts.pixelBold, color: '#fff', fontSize: 10, textShadowColor: '#000', textShadowOffset: {width: 1, height: 1}, textShadowRadius: 0 },
+  storeButton: { backgroundColor: Colors.gold, borderWidth: 4, borderColor: Colors.cardBorder, paddingVertical: 18, alignItems: 'center', shadowColor: '#000', shadowOffset: {width: 4, height: 4}, shadowOpacity: 1, shadowRadius: 0, elevation: 0 },
+  storeButtonText: { fontFamily: Fonts.pixelBold, color: '#000', fontSize: 10 },
 
-  parentLink: { alignItems: 'center', paddingVertical: 12 },
-  parentLinkText: { color: '#444', fontSize: 13 },
+  parentLink: { alignItems: 'center', paddingVertical: 16, backgroundColor: Colors.card, borderWidth: 4, borderColor: Colors.cardBorder, marginHorizontal: 32, shadowColor: '#000', shadowOffset: {width: 4, height: 4}, shadowOpacity: 1, shadowRadius: 0, elevation: 0 },
+  parentLinkText: { fontFamily: Fonts.pixelBold, color: Colors.text, fontSize: 10 },
 
   emergencyButton: {
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: '#cc0000',
-    paddingVertical: 20,
+    backgroundColor: Colors.healthRed,
+    paddingVertical: 24,
+    paddingBottom: 40,
     alignItems: 'center',
-    borderTopWidth: 2,
-    borderColor: '#ff4444',
+    borderTopWidth: 6,
+    borderColor: '#000',
   },
-  emergencyText: { color: '#fff', fontWeight: '900', fontSize: 16, letterSpacing: 1 },
+  emergencyText: { fontFamily: Fonts.pixelBold, color: '#fff', fontSize: 12, textShadowColor: '#000', textShadowOffset: {width: 2, height: 2}, textShadowRadius: 0 },
 });

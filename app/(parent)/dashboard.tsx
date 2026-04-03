@@ -1,7 +1,9 @@
 import { useAuth } from '@clerk/clerk-expo';
 import { Redirect, router } from 'expo-router';
-import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useAppStore } from '@/store/useAppStore';
+
+import { Colors, Fonts } from '@/constants/theme';
 
 export default function ParentDashboard() {
   const { signOut } = useAuth();
@@ -11,7 +13,7 @@ export default function ParentDashboard() {
   if (!isHydrated) {
     return (
       <View style={styles.loading}>
-        <ActivityIndicator color="#FFD700" size="large" />
+        <Text style={{ fontFamily: Fonts.pixelBold, color: '#fff', fontSize: 16 }}>LOADING...</Text>
       </View>
     );
   }
@@ -23,20 +25,21 @@ export default function ParentDashboard() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.greeting}>Welcome back,</Text>
-      <Text style={styles.childName}>{profile.name}'s Quest</Text>
+      <Text style={styles.greeting}>KINGDOM OVERVIEW</Text>
+      <Text style={styles.childName}>{profile.name}&apos;s Quest</Text>
 
       <View style={styles.card}>
         <Text style={styles.cardLabel}>CURRENT ZONE</Text>
-        <Text style={styles.cardValue}>🟢 Green — Controlled</Text>
+        <Text style={styles.cardValue}>GREEN</Text>
+        <Text style={styles.cardSub}>Status: Controlled</Text>
       </View>
 
       <TouchableOpacity style={styles.childButton} onPress={() => router.push('/(child)/home')}>
-        <Text style={styles.childButtonText}>🗡️ Switch to Child View</Text>
+        <Text style={styles.childButtonText}>START QUEST (CHILD VIEW)</Text>
       </TouchableOpacity>
 
       <TouchableOpacity style={styles.signOutButton} onPress={() => signOut()}>
-        <Text style={styles.signOutText}>Sign Out</Text>
+        <Text style={styles.signOutText}>SAVE & QUIT (Sign Out)</Text>
       </TouchableOpacity>
     </View>
   );
@@ -45,42 +48,45 @@ export default function ParentDashboard() {
 const styles = StyleSheet.create({
   loading: {
     flex: 1,
-    backgroundColor: '#1a1a2e',
+    backgroundColor: Colors.background,
     alignItems: 'center',
     justifyContent: 'center',
   },
   container: {
     flex: 1,
-    backgroundColor: '#1a1a2e',
+    backgroundColor: Colors.background,
     alignItems: 'center',
     justifyContent: 'center',
     gap: 16,
     paddingHorizontal: 24,
   },
-  greeting: { color: '#aaa', fontSize: 16 },
-  childName: { color: '#FFD700', fontSize: 28, fontWeight: 'bold', marginBottom: 8 },
+  greeting: { fontFamily: Fonts.pixelBold, color: Colors.text, fontSize: 14, opacity: 0.8 },
+  childName: { fontFamily: Fonts.pixelBold, color: Colors.text, fontSize: 24, marginBottom: 16, textShadowColor: '#fff', textShadowOffset: {width: 2, height: 2}, textShadowRadius: 0 },
   card: {
-    backgroundColor: '#2a2a3e',
-    borderRadius: 16,
-    padding: 20,
+    backgroundColor: Colors.card,
+    padding: 24,
     width: '100%',
-    borderWidth: 1,
-    borderColor: '#3a3a5e',
+    borderWidth: 4,
+    borderColor: Colors.cardBorder,
     alignItems: 'center',
-    gap: 8,
+    gap: 6,
+    shadowColor: '#000', shadowOffset: {width: 4, height: 4}, shadowOpacity: 1, shadowRadius: 0, elevation: 0
   },
-  cardLabel: { color: '#888', fontSize: 11, letterSpacing: 2, fontWeight: '600' },
-  cardValue: { color: '#4ade80', fontSize: 18, fontWeight: 'bold' },
+  cardLabel: { fontFamily: Fonts.pixelBold, color: Colors.text, fontSize: 12, opacity: 0.8 },
+  cardValue: { fontFamily: Fonts.pixelBold, color: Colors.background, fontSize: 28, textShadowColor: '#222', textShadowOffset: {width: 1, height: 1}, textShadowRadius: 0 },
+  cardSub: { fontFamily: Fonts.pixel, color: Colors.text, fontSize: 20 },
   childButton: {
-    backgroundColor: '#FFD700',
-    paddingHorizontal: 32,
-    paddingVertical: 16,
-    borderRadius: 14,
-    marginTop: 8,
+    backgroundColor: Colors.primary,
+    borderWidth: 4,
+    borderColor: Colors.cardBorder,
+    paddingHorizontal: 16,
+    paddingVertical: 20,
+    marginTop: 16,
     width: '100%',
     alignItems: 'center',
+    shadowColor: '#000', shadowOffset: {width: 4, height: 4}, shadowOpacity: 1, shadowRadius: 0, elevation: 0
   },
-  childButtonText: { color: '#1a1a2e', fontWeight: 'bold', fontSize: 16 },
-  signOutButton: { paddingVertical: 12, marginTop: 8 },
-  signOutText: { color: '#555', fontSize: 14 },
+  childButtonText: { fontFamily: Fonts.pixelBold, color: '#fff', fontSize: 12, textShadowColor: '#000', textShadowOffset: {width: 1, height: 1}, textShadowRadius: 0 },
+  signOutButton: { paddingVertical: 12, marginTop: 12 },
+  signOutText: { fontFamily: Fonts.pixel, color: Colors.text, fontSize: 18, textDecorationLine: 'underline' },
 });

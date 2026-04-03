@@ -9,6 +9,6 @@ export default function ParentLayout() {
   }
 
   return (
-    <Stack screenOptions={{ headerShown: false }} />
+    <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: 'transparent' } }} />
   );
 }
