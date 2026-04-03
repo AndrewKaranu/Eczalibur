@@ -1,5 +1,5 @@
 /**
- * Parent onboarding wizard — 8 steps.
+ * Parent onboarding wizard — 9 steps.
  * Collects child profile → fetches weather → generates Claude action plan → prize setup.
  */
 
@@ -24,9 +24,9 @@ import { OnboardingStep } from '@/components/parent/OnboardingStep';
 import { fetchWeather } from '@/lib/weather';
 import { useAppStore } from '@/store/useAppStore';
 import type { ActionPlan, BodyArea, Medication, Prize } from '@/lib/types';
+import { Colors, Fonts } from '@/constants/theme';
 
 const TOTAL_STEPS = 9;
-
 
 const COMMON_TRIGGERS = ['Dust mites', 'Pet dander', 'Pollen', 'Sweat', 'Heat', 'Cold/dry air', 'Wool/synthetic fabrics', 'Soap/detergent', 'Stress', 'Certain foods'];
 const DEFAULT_PRIZES: Prize[] = [
@@ -54,20 +54,20 @@ export default function OnboardingScreen() {
   const [location, setLocation] = useState('');
   const [diagnosis, setDiagnosis] = useState('');
 
-  // Step 3 — body areas
+  // Step 4 — body areas (shifted due to Kelvin's new steps)
   const [selectedAreas, setSelectedAreas] = useState<BodyArea[]>([]);
 
-  // Step 4 — medications
+  // Step 5 — medications
   const [medications, setMedications] = useState<Medication[]>([{ name: '', frequency: '', instructions: '' }]);
 
-  // Step 5 — triggers
+  // Step 6 — triggers
   const [selectedTriggers, setSelectedTriggers] = useState<string[]>([]);
   const [customTrigger, setCustomTrigger] = useState('');
 
-  // Step 6 — plan result
+  // Step 7 — plan result
   const [generatedPlan, setGeneratedPlan] = useState<ActionPlan | null>(null);
 
-  // Step 7 — prizes
+  // Step 9 — prizes
   const [prizes, setLocalPrizes] = useState<Prize[]>(DEFAULT_PRIZES);
 
   function toggleArea(area: BodyArea) {
@@ -266,11 +266,11 @@ export default function OnboardingScreen() {
                   key={val}
                   style={[
                     styles.genderPill,
-                    parentRelationship === val && { borderColor: '#FFD700', backgroundColor: 'rgba(255,215,0,0.1)' },
+                    parentRelationship === val && { borderColor: '#fff', backgroundColor: Colors.gold },
                   ]}
                   onPress={() => setParentRelationship(val)}
                 >
-                  <Text style={[styles.genderPillText, parentRelationship === val && { color: '#FFD700' }]}>
+                  <Text style={[styles.genderPillText, parentRelationship === val && { color: '#000' }]}>
                     {label}
                   </Text>
                 </TouchableOpacity>
@@ -284,10 +284,10 @@ export default function OnboardingScreen() {
           <OnboardingStep step={2} totalSteps={TOTAL_STEPS} title="Welcome to Eczcalibur" subtitle="Let's set up your child's personalised eczema action plan.">
             <View style={styles.consentBox}>
               <Text style={styles.consentTitle}>📋 Before we begin</Text>
-              <Text style={styles.consentText}>• This app helps manage your child's eczema using a Written Action Plan generated with AI assistance.</Text>
-              <Text style={styles.consentText}>• Eczcalibur is a support tool — it does not replace your dermatologist's advice.</Text>
-              <Text style={styles.consentText}>• Claude AI will process your child's profile to generate zone-based instructions. Data is sent only when you take action.</Text>
-              <Text style={styles.consentText}>• You can update or delete your child's profile at any time.</Text>
+              <Text style={styles.consentText}>• This app helps manage your child&apos;s eczema using a Written Action Plan generated with AI assistance.</Text>
+              <Text style={styles.consentText}>• Eczcalibur is a support tool — it does not replace your dermatologist&apos;s advice.</Text>
+              <Text style={styles.consentText}>• Claude AI will process your child&apos;s profile to generate zone-based instructions. Data is sent only when you take action.</Text>
+              <Text style={styles.consentText}>• You can update or delete your child&apos;s profile at any time.</Text>
             </View>
             <View style={styles.consentBox}>
               <Text style={styles.consentTitle}>🔒 Privacy &amp; Data</Text>
@@ -301,7 +301,7 @@ export default function OnboardingScreen() {
         {/* ── Step 3: Child details ── */}
         {step === 3 && (
           <OnboardingStep step={3} totalSteps={TOTAL_STEPS} title="About your child" subtitle="This info personalises the action plan.">
-            <Text style={styles.label}>Child's first name</Text>
+            <Text style={styles.label}>Child&apos;s first name</Text>
             <TextInput style={styles.input} value={childName} onChangeText={setChildName} placeholder="E.g. Alex" placeholderTextColor="#555" />
 
             <Text style={styles.label}>Age (years)</Text>
@@ -314,11 +314,11 @@ export default function OnboardingScreen() {
                   key={val}
                   style={[
                     styles.genderPill,
-                    gender === val && { borderColor: '#FFD700', backgroundColor: 'rgba(255,215,0,0.1)' },
+                    gender === val && { borderColor: '#fff', backgroundColor: Colors.gold },
                   ]}
                   onPress={() => setGender(val)}
                 >
-                  <Text style={[styles.genderPillText, gender === val && { color: '#FFD700' }]}>
+                  <Text style={[styles.genderPillText, gender === val && { color: '#000' }]}>
                     {label}
                   </Text>
                 </TouchableOpacity>
@@ -406,7 +406,7 @@ export default function OnboardingScreen() {
               <Text style={styles.generateTitle}>Ready to forge {childName}'s action plan</Text>
               <Text style={styles.generateText}>This will use your child's profile and current weather data to create Green, Yellow, and Red zone instructions.</Text>
               <Text style={styles.generateDisclaimer}>Remember: this plan is a starting point. Review it with your dermatologist before using.</Text>
-              {loading && <ActivityIndicator color="#FFD700" size="large" style={{ marginTop: 24 }} />}
+              {loading && <Text style={styles.loadingText}>CASTING SPELL...</Text>}
               {loading && <Text style={styles.loadingText}>Consulting the AI wizard...</Text>}
             </View>
           </OnboardingStep>
@@ -477,8 +477,8 @@ export default function OnboardingScreen() {
             onPress={nextStep}
             disabled={!canProceed() || loading}
           >
-            {loading && step === 7 ? (
-              <ActivityIndicator color="#1a1a2e" />
+            {loading && (step === 7 || step === TOTAL_STEPS) ? (
+              <Text style={{ fontFamily: Fonts.pixelBold, color: '#fff' }}>...</Text>
             ) : (
               <Text style={styles.nextButtonText}>
                 {step === TOTAL_STEPS ? '✓ Finish Setup' : step === 7 ? '⚔️ Generate Plan' : 'Continue →'}
@@ -492,78 +492,83 @@ export default function OnboardingScreen() {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: '#1a1a2e' },
+  screen: { flex: 1, backgroundColor: Colors.background },
   scroll: { flexGrow: 1, paddingBottom: 40 },
-  label: { color: '#aaa', fontSize: 13, fontWeight: '600', marginBottom: 6, marginTop: 16 },
+  label: { fontFamily: Fonts.pixelBold, color: Colors.text, fontSize: 10, marginBottom: 6, marginTop: 16 },
   input: {
-    backgroundColor: '#2a2a3e',
-    borderRadius: 10,
+    backgroundColor: '#e8ddc5',
     paddingHorizontal: 14,
     paddingVertical: 12,
-    color: '#fff',
-    fontSize: 15,
-    borderWidth: 1,
-    borderColor: '#3a3a5e',
+    color: Colors.text,
+    fontSize: 20,
+    fontFamily: Fonts.pixel,
+    borderWidth: 4,
+    borderColor: Colors.cardBorder,
     marginBottom: 4,
   },
-  hint: { color: '#666', fontSize: 12, textAlign: 'center', marginTop: 16, lineHeight: 18 },
+  hint: { fontFamily: Fonts.pixel, color: Colors.text, fontSize: 16, textAlign: 'center', marginTop: 16, lineHeight: 20, opacity: 0.8 },
   // Consent
-  consentBox: { backgroundColor: '#2a2a3e', borderRadius: 12, padding: 16, marginBottom: 16, borderWidth: 1, borderColor: '#3a3a5e' },
-  consentTitle: { color: '#FFD700', fontWeight: 'bold', fontSize: 14, marginBottom: 10 },
-  consentText: { color: '#ccc', fontSize: 13, lineHeight: 20, marginBottom: 6 },
+  consentBox: { backgroundColor: Colors.card, padding: 16, marginBottom: 16, borderWidth: 4, borderColor: Colors.cardBorder, shadowColor: '#000', shadowOffset: {width: 4, height: 4}, shadowOpacity: 1, shadowRadius: 0, elevation: 0 },
+  consentTitle: { fontFamily: Fonts.pixelBold, color: Colors.text, fontSize: 12, marginBottom: 16 },
+  consentText: { fontFamily: Fonts.pixel, color: Colors.text, fontSize: 18, lineHeight: 24, marginBottom: 12 },
   // Chips
   chipGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 8 },
-  chip: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, backgroundColor: '#2a2a3e', borderWidth: 1, borderColor: '#3a3a5e' },
-  chipSelected: { backgroundColor: '#3a3a1e', borderColor: '#FFD700' },
-  chipText: { color: '#aaa', fontSize: 13 },
-  chipTextSelected: { color: '#FFD700', fontWeight: '600' },
+  chip: { paddingHorizontal: 14, paddingVertical: 10, backgroundColor: Colors.card, borderWidth: 3, borderColor: Colors.cardBorder },
+  chipSelected: { backgroundColor: Colors.gold, borderColor: '#fff' },
+  chipText: { fontFamily: Fonts.pixel, color: Colors.text, fontSize: 18 },
+  chipTextSelected: { fontFamily: Fonts.pixelBold, color: '#000', fontSize: 10 },
   // Medications
-  medCard: { backgroundColor: '#2a2a3e', borderRadius: 12, padding: 14, marginBottom: 12, borderWidth: 1, borderColor: '#3a3a5e' },
-  medHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
-  medTitle: { color: '#FFD700', fontWeight: '600', fontSize: 13 },
-  removeText: { color: '#ff6b6b', fontSize: 12 },
-  addButton: { borderWidth: 1, borderColor: '#FFD700', borderStyle: 'dashed', borderRadius: 10, paddingVertical: 12, alignItems: 'center', marginTop: 4 },
-  addButtonText: { color: '#FFD700', fontSize: 14, fontWeight: '600' },
+  medCard: { backgroundColor: Colors.card, padding: 14, marginBottom: 12, borderWidth: 4, borderColor: Colors.cardBorder, shadowColor: '#000', shadowOffset: {width: 4, height: 4}, shadowOpacity: 1, shadowRadius: 0, elevation: 0 },
+  medHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
+  medTitle: { fontFamily: Fonts.pixelBold, color: Colors.text, fontSize: 10 },
+  removeText: { fontFamily: Fonts.pixelBold, color: Colors.healthRed, fontSize: 10 },
+  addButton: { borderWidth: 4, borderColor: Colors.cardBorder, backgroundColor: Colors.gold, paddingVertical: 16, alignItems: 'center', marginTop: 4, shadowColor: '#000', shadowOffset: {width: 4, height: 4}, shadowOpacity: 1, shadowRadius: 0, elevation: 0 },
+  addButtonText: { fontFamily: Fonts.pixelBold, color: '#000', fontSize: 12 },
   // Triggers
   customTriggerRow: { flexDirection: 'row', gap: 8, marginTop: 16, alignItems: 'center' },
-  addInlineButton: { backgroundColor: '#FFD700', paddingHorizontal: 16, paddingVertical: 12, borderRadius: 10 },
-  addInlineText: { color: '#1a1a2e', fontWeight: 'bold', fontSize: 14 },
-  customTriggerTag: { color: '#4ade80', fontSize: 13, marginTop: 6 },
+  addInlineButton: { backgroundColor: Colors.gold, paddingHorizontal: 16, paddingVertical: 16, borderWidth: 4, borderColor: Colors.cardBorder, shadowColor: '#000', shadowOffset: {width: 4, height: 4}, shadowOpacity: 1, shadowRadius: 0, elevation: 0 },
+  addInlineText: { fontFamily: Fonts.pixelBold, color: '#000', fontSize: 12 },
+  customTriggerTag: { fontFamily: Fonts.pixelBold, color: '#fff', fontSize: 10, marginTop: 12, textShadowColor: '#000', textShadowOffset: {width: 1, height: 1}, textShadowRadius: 0 },
   // Generate
-  generateBox: { alignItems: 'center', padding: 24, gap: 16 },
+  generateBox: { alignItems: 'center', padding: 24, gap: 16, backgroundColor: Colors.card, borderWidth: 4, borderColor: Colors.cardBorder, shadowColor: '#000', shadowOffset: {width: 4, height: 4}, shadowOpacity: 1, shadowRadius: 0, elevation: 0 },
   generateIcon: { fontSize: 48 },
-  generateTitle: { color: '#FFD700', fontSize: 18, fontWeight: 'bold', textAlign: 'center' },
-  generateText: { color: '#ccc', fontSize: 14, textAlign: 'center', lineHeight: 22 },
-  generateDisclaimer: { color: '#888', fontSize: 12, textAlign: 'center', lineHeight: 18, borderTopWidth: 1, borderColor: '#333', paddingTop: 16 },
-  loadingText: { color: '#aaa', fontSize: 14, marginTop: 8 },
+  generateTitle: { fontFamily: Fonts.pixelBold, color: Colors.text, fontSize: 14, textAlign: 'center', lineHeight: 22 },
+  generateText: { fontFamily: Fonts.pixel, color: Colors.text, fontSize: 20, textAlign: 'center', lineHeight: 24 },
+  generateDisclaimer: { fontFamily: Fonts.pixel, color: Colors.text, fontSize: 16, textAlign: 'center', lineHeight: 22, borderTopWidth: 2, borderColor: Colors.cardBorder, paddingTop: 16 },
+  loadingText: { fontFamily: Fonts.pixel, color: Colors.text, fontSize: 20, marginTop: 8 },
   // Plan zones
-  zoneCard: { borderRadius: 12, padding: 14, marginBottom: 12, borderWidth: 2 },
-  zoneTitle: { fontWeight: 'bold', fontSize: 14, marginBottom: 8, letterSpacing: 1 },
-  zoneInstruction: { color: '#ddd', fontSize: 13, lineHeight: 20, marginBottom: 4 },
+  zoneCard: { padding: 16, marginBottom: 16, borderWidth: 4, shadowColor: '#000', shadowOffset: {width: 4, height: 4}, shadowOpacity: 1, shadowRadius: 0, elevation: 0 },
+  zoneTitle: { fontFamily: Fonts.pixelBold, fontSize: 12, marginBottom: 12, textShadowColor: '#000', textShadowOffset: {width: 1, height: 1}, textShadowRadius: 0 },
+  zoneInstruction: { fontFamily: Fonts.pixel, color: '#fff', fontSize: 18, lineHeight: 24, marginBottom: 8, textShadowColor: '#000', textShadowOffset: {width: 1, height: 1}, textShadowRadius: 0 },
   // Prizes
-  prizeCard: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#2a2a3e', borderRadius: 12, padding: 14, marginBottom: 10, borderWidth: 1, borderColor: '#3a3a5e' },
-  prizeIcon: { fontSize: 28 },
-  prizeInput: { color: '#fff', fontSize: 15, borderBottomWidth: 1, borderColor: '#3a3a5e', paddingBottom: 4, marginBottom: 4 },
-  prizeCost: { color: '#FFD700', fontSize: 12 },
-  // Gender picker
+  prizeCard: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: Colors.card, padding: 14, marginBottom: 16, borderWidth: 4, borderColor: Colors.cardBorder, shadowColor: '#000', shadowOffset: {width: 4, height: 4}, shadowOpacity: 1, shadowRadius: 0, elevation: 0 },
+  prizeIcon: { fontSize: 32 },
+  prizeInput: { color: Colors.text, fontSize: 22, fontFamily: Fonts.pixel, borderBottomWidth: 2, borderColor: Colors.cardBorder, paddingBottom: 4, marginBottom: 8 },
+  prizeCost: { fontFamily: Fonts.pixelBold, color: Colors.text, fontSize: 10 },
+  // Gender/Relationship picker
   genderPill: {
     flex: 1,
-    borderWidth: 1,
-    borderColor: '#3a3a5e',
-    borderRadius: 12,
+    borderWidth: 4,
+    borderColor: Colors.cardBorder,
+    backgroundColor: Colors.card,
     paddingVertical: 10,
     alignItems: 'center',
+    shadowColor: '#000', 
+    shadowOffset: {width: 4, height: 4}, 
+    shadowOpacity: 1, 
+    shadowRadius: 0, 
+    elevation: 0
   },
   genderPillText: {
-    color: '#888',
-    fontSize: 13,
-    fontWeight: '600',
+    fontFamily: Fonts.pixelBold, 
+    color: Colors.text, 
+    fontSize: 10
   },
   // Nav
   navRow: { flexDirection: 'row', gap: 12, paddingHorizontal: 24, paddingTop: 24 },
-  backButton: { paddingHorizontal: 20, paddingVertical: 14, borderRadius: 12, borderWidth: 1, borderColor: '#3a3a5e' },
-  backButtonText: { color: '#aaa', fontSize: 14 },
-  nextButton: { flex: 1, backgroundColor: '#FFD700', paddingVertical: 14, borderRadius: 12, alignItems: 'center', shadowColor: '#FFD700', shadowOpacity: 0.3, shadowRadius: 8, shadowOffset: { width: 0, height: 2 } },
-  nextButtonDisabled: { backgroundColor: '#3a3a1e', shadowOpacity: 0 },
-  nextButtonText: { color: '#1a1a2e', fontWeight: 'bold', fontSize: 15 },
+  backButton: { paddingHorizontal: 16, paddingVertical: 20, borderWidth: 4, borderColor: Colors.cardBorder, backgroundColor: Colors.card, shadowColor: '#000', shadowOffset: {width: 4, height: 4}, shadowOpacity: 1, shadowRadius: 0, elevation: 0 },
+  backButtonText: { fontFamily: Fonts.pixelBold, color: Colors.text, fontSize: 10 },
+  nextButton: { flex: 1, backgroundColor: Colors.primary, paddingVertical: 20, alignItems: 'center', borderWidth: 4, borderColor: Colors.cardBorder, shadowColor: '#000', shadowOffset: {width: 4, height: 4}, shadowOpacity: 1, shadowRadius: 0, elevation: 0 },
+  nextButtonDisabled: { backgroundColor: '#888', shadowOpacity: 0 },
+  nextButtonText: { fontFamily: Fonts.pixelBold, color: '#fff', fontSize: 12, textShadowColor: '#000', textShadowOffset: {width: 1, height: 1}, textShadowRadius: 0 },
 });

@@ -14,12 +14,12 @@ interface OpenMeteoResponse {
 }
 
 interface GeocodeResult {
-  results?: Array<{
+  results?: {
     latitude: number;
     longitude: number;
     name: string;
     country: string;
-  }>;
+  }[];
 }
 
 /**

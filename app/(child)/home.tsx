@@ -16,6 +16,7 @@ import { useTheme } from '@/context/ThemeContext';
 import { useAppStore } from '@/store/useAppStore';
 import { PinVerifyModal } from '@/lib/auth/PinVerifyModal';
 import type { Zone } from '@/lib/types';
+import { Colors, Fonts } from '@/constants/theme';
 
 // ─── Assets ───────────────────────────────────────────────────────────────────
 
@@ -23,6 +24,30 @@ const HERO_IMAGES = {
   male:    require('@/assets/images/hero-male.jpg'),
   female:  require('@/assets/images/hero-female.jpg'),
   neutral: require('@/assets/images/hero-male.jpg'),
+};
+
+const ZONE_CONFIG: Record<Zone, { bg: string; border: string; label: string; emoji: string; questTitle: string }> = {
+  green: {
+    bg: '#0d2b0d',
+    border: '#4ade80',
+    label: 'GREEN ZONE',
+    emoji: '🟢',
+    questTitle: 'Quest Active — Controlled!',
+  },
+  yellow: {
+    bg: '#2b2200',
+    border: '#FFD700',
+    label: 'YELLOW ZONE',
+    emoji: '🟡',
+    questTitle: 'Watch Out — Flare Starting!',
+  },
+  red: {
+    bg: '#2b0000',
+    border: '#ff4444',
+    label: 'RED ZONE',
+    emoji: '🔴',
+    questTitle: 'DANGER — Flare Active!',
+  },
 };
 
 // ─── Fallback quest steps ─────────────────────────────────────────────────────
@@ -62,7 +87,7 @@ function shortTitle(step: string): string {
 // ─── Screen ───────────────────────────────────────────────────────────────────
 
 export default function ChildHome() {
-  const { theme, isDark, toggleTheme } = useTheme();
+  const { toggleTheme } = useTheme();
   const { profile, points, flareLogs, currentZone, awardPoints, questCompletions, completeQuest } = useAppStore();
 
   const [showParentPin, setShowParentPin] = useState(false);
@@ -85,12 +110,11 @@ export default function ChildHome() {
   }
 
   return (
-    <View style={[styles.screen, { backgroundColor: theme.bgPrimary }]}>
-
+    <View style={styles.screen}>
       {/* ── Top bar — sits above the hero image ── */}
-      <View style={[styles.topBar, { backgroundColor: theme.bgNav }]}>
+      <View style={styles.topBar}>
         <TouchableOpacity onPress={toggleTheme}>
-          <MaterialIcons name={isDark ? 'light-mode' : 'dark-mode'} size={22} color="#FFD700" />
+          <Text style={{ fontSize: 20 }}>🌗</Text>
         </TouchableOpacity>
         <Text style={styles.topTitle}>QUEST LOG</Text>
         <View style={styles.goldBadge}>
@@ -100,7 +124,7 @@ export default function ChildHome() {
 
       {/* ── Hero scene — full image, unobscured ── */}
       <ImageBackground source={heroImage} style={styles.heroScene} resizeMode="cover">
-        <View style={[styles.nameOverlay, { backgroundColor: 'rgba(2,11,2,0.65)' }]}>
+        <View style={styles.nameOverlay}>
           <Text style={styles.heroName}>{childName.toUpperCase()}</Text>
           <Text style={styles.heroLevel}>LEVEL {level} FOREST GUARDIAN</Text>
         </View>
@@ -108,15 +132,15 @@ export default function ChildHome() {
 
       {/* ── Quest section (scrollable) ── */}
       <ScrollView
-        style={{ flex: 1, backgroundColor: theme.bgPrimary }}
+        style={{ flex: 1, backgroundColor: 'transparent' }}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
         {/* Header row */}
         <View style={styles.questHeader}>
-          <Text style={[styles.questTitle, { color: theme.textPrimary }]}>ACTIVE QUESTS</Text>
+          <Text style={styles.questTitle}>ACTIVE QUESTS</Text>
           <TouchableOpacity onPress={() => setShowAllQuests(true)}>
-            <Text style={[styles.viewAll, { color: theme.gold }]}>VIEW ALL</Text>
+            <Text style={styles.viewAll}>VIEW ALL</Text>
           </TouchableOpacity>
         </View>
 
@@ -130,33 +154,32 @@ export default function ChildHome() {
                 style={[
                   styles.questCard,
                   {
-                    backgroundColor: theme.bgCard,
-                    borderColor: done ? theme.green : theme.border,
-                    opacity: done ? 0.55 : 1,
+                    borderColor: done ? '#aaa' : Colors.cardBorder,
+                    opacity: done ? 0.6 : 1,
                   },
                 ]}
                 onPress={() => setSelectedQuest({ index: i, step })}
                 activeOpacity={0.75}
               >
-                <View style={[styles.questIconBg, { backgroundColor: theme.bgGlass }]}>
+                <View style={styles.questIconBg}>
                   <MaterialIcons
                     name={STEP_ICONS[i % STEP_ICONS.length]}
                     size={20}
-                    color={done ? theme.gold : theme.green}
+                    color={done ? Colors.gold : Colors.background}
                   />
                 </View>
-                <Text style={[styles.questText, { color: theme.textPrimary }]} numberOfLines={2}>
+                <Text style={styles.questText} numberOfLines={2}>
                   {shortTitle(step)}
                 </Text>
-                <View style={[styles.progressBg, { backgroundColor: theme.border }]}>
+                <View style={styles.progressBg}>
                   <View
                     style={[
                       styles.progressFill,
-                      { backgroundColor: done ? theme.gold : theme.green, width: done ? '100%' : '10%' },
+                      { backgroundColor: done ? Colors.gold : Colors.background, width: done ? '100%' : '10%' },
                     ]}
                   />
                 </View>
-                <Text style={[styles.questReward, { color: theme.gold }]}>
+                <Text style={[styles.questReward, { color: done ? Colors.text : Colors.primary }]}>
                   {done ? '✓ Done' : '+10 🪙'}
                 </Text>
               </TouchableOpacity>
@@ -166,20 +189,19 @@ export default function ChildHome() {
 
         {/* Parent view link */}
         <TouchableOpacity style={styles.parentLink} onPress={() => setShowParentPin(true)}>
-          <MaterialIcons name="lock" size={13} color={theme.textMuted} />
-          <Text style={[styles.parentLinkText, { color: theme.textMuted }]}> Parent View</Text>
+          <MaterialIcons name="lock" size={14} color={Colors.text} />
+          <Text style={styles.parentLinkText}>PARENT VIEW</Text>
         </TouchableOpacity>
       </ScrollView>
 
       {/* ── FLARE-UP button (fixed footer) ── */}
-      <View style={[styles.flareWrapper, { backgroundColor: theme.bgPrimary }]}>
+      <View style={styles.flareWrapper}>
         <TouchableOpacity
-          style={[styles.flareButton, { backgroundColor: theme.error, shadowColor: theme.errorDark }]}
+          style={styles.emergencyButton}
           onPress={() => router.push('/(child)/emergency')}
           activeOpacity={0.85}
         >
-          <MaterialIcons name="warning" size={22} color="#fff" />
-          <Text style={styles.flareText}>FLARE-UP!</Text>
+          <Text style={styles.emergencyText}>🚨  MY SKIN IS BAD — GET HELP</Text>
         </TouchableOpacity>
       </View>
 
@@ -187,20 +209,20 @@ export default function ChildHome() {
       <Modal visible={selectedQuest !== null} transparent animationType="fade">
         <Pressable style={styles.backdrop} onPress={() => setSelectedQuest(null)}>
           <Pressable
-            style={[styles.questModal, { backgroundColor: theme.bgCard, borderColor: theme.border }]}
+            style={styles.questModal}
             onPress={() => {/* block backdrop tap propagation */}}
           >
-            <View style={[styles.questModalIcon, { backgroundColor: theme.bgGlass }]}>
+            <View style={styles.questModalIcon}>
               <MaterialIcons
                 name={selectedQuest ? STEP_ICONS[selectedQuest.index % STEP_ICONS.length] : 'healing'}
                 size={36}
-                color={theme.green}
+                color={Colors.background}
               />
             </View>
-            <Text style={[styles.questModalTitle, { color: theme.textPrimary }]}>
+            <Text style={styles.questModalTitle}>
               {selectedQuest ? shortTitle(selectedQuest.step) : ''}
             </Text>
-            <Text style={[styles.questModalDesc, { color: theme.textMuted }]}>
+            <Text style={styles.questModalDesc}>
               {selectedQuest?.step ?? ''}
             </Text>
             <TouchableOpacity
@@ -208,8 +230,8 @@ export default function ChildHome() {
                 styles.completeBtn,
                 {
                   backgroundColor: selectedQuest && completedSet.has(selectedQuest.index)
-                    ? theme.bgSurface
-                    : theme.gold,
+                    ? '#e8ddc5'
+                    : Colors.gold,
                 },
               ]}
               onPress={() => selectedQuest && handleComplete(selectedQuest.index)}
@@ -220,18 +242,18 @@ export default function ChildHome() {
                   styles.completeBtnText,
                   {
                     color: selectedQuest && completedSet.has(selectedQuest.index)
-                      ? theme.textMuted
-                      : theme.bgNav,
+                      ? Colors.text
+                      : '#000',
                   },
                 ]}
               >
                 {selectedQuest && completedSet.has(selectedQuest.index)
-                  ? '✓ Quest Completed'
-                  : 'Complete Quest  +10 🪙'}
+                  ? '✓ QUEST COMPLETED'
+                  : 'COMPLETE  +10 🪙'}
               </Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={() => setSelectedQuest(null)} style={styles.closeBtn}>
-              <Text style={[styles.closeBtnText, { color: theme.textMuted }]}>✕ Close</Text>
+              <Text style={styles.closeBtnText}>✕ Close</Text>
             </TouchableOpacity>
           </Pressable>
         </Pressable>
@@ -241,10 +263,10 @@ export default function ChildHome() {
       <Modal visible={showAllQuests} transparent animationType="slide">
         <Pressable style={styles.backdrop} onPress={() => setShowAllQuests(false)}>
           <Pressable
-            style={[styles.allQuestsModal, { backgroundColor: theme.bgCard, borderColor: theme.border }]}
+            style={styles.allQuestsModal}
             onPress={() => {}}
           >
-            <Text style={[styles.allQuestsTitle, { color: theme.textPrimary }]}>All Quests</Text>
+            <Text style={styles.allQuestsTitle}>ALL QUESTS</Text>
             <FlatList
               data={steps}
               keyExtractor={(_, i) => String(i)}
@@ -253,32 +275,32 @@ export default function ChildHome() {
                 const done = completedSet.has(index);
                 return (
                   <TouchableOpacity
-                    style={[styles.allQuestRow, { borderBottomColor: theme.border, opacity: done ? 0.5 : 1 }]}
+                    style={[styles.allQuestRow, { opacity: done ? 0.6 : 1 }]}
                     onPress={() => {
                       setShowAllQuests(false);
                       setSelectedQuest({ index, step: item });
                     }}
                   >
-                    <View style={[styles.questIconBg, { backgroundColor: theme.bgGlass }]}>
+                    <View style={styles.questIconBg}>
                       <MaterialIcons
                         name={STEP_ICONS[index % STEP_ICONS.length]}
                         size={18}
-                        color={done ? theme.gold : theme.green}
+                        color={done ? Colors.gold : Colors.background}
                       />
                     </View>
-                    <Text style={[styles.allQuestText, { color: theme.textPrimary }]} numberOfLines={1}>
+                    <Text style={styles.allQuestText} numberOfLines={1}>
                       {shortTitle(item)}
                     </Text>
                     {done
-                      ? <MaterialIcons name="check-circle" size={16} color={theme.green} />
-                      : <MaterialIcons name="chevron-right" size={16} color={theme.textMuted} />
+                      ? <MaterialIcons name="check-circle" size={16} color={Colors.background} />
+                      : <MaterialIcons name="chevron-right" size={16} color={Colors.text} />
                     }
                   </TouchableOpacity>
                 );
               }}
             />
             <TouchableOpacity onPress={() => setShowAllQuests(false)} style={styles.closeBtn}>
-              <Text style={[styles.closeBtnText, { color: theme.textMuted }]}>✕ Close</Text>
+              <Text style={styles.closeBtnText}>✕ Close</Text>
             </TouchableOpacity>
           </Pressable>
         </Pressable>
@@ -297,70 +319,81 @@ export default function ChildHome() {
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
-  screen: { flex: 1 },
+  screen: { flex: 1, backgroundColor: 'transparent' },
 
   // Top bar ────────────────────────────────────────────────────────────────────
   topBar: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    backgroundColor: Colors.card,
+    borderWidth: 4,
+    borderColor: Colors.cardBorder,
+    marginHorizontal: 16,
+    marginTop: 52,
+    marginBottom: 12,
     paddingHorizontal: 16,
-    paddingTop: 52,
-    paddingBottom: 12,
+    paddingVertical: 12,
     shadowColor: '#000',
-    shadowOpacity: 0.4,
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: { width: 4, height: 4 },
+    shadowOpacity: 1,
     shadowRadius: 0,
-    elevation: 8,
+    elevation: 0,
   },
   topTitle: {
     flex: 1,
     textAlign: 'center',
-    fontSize: 16,
-    fontWeight: '900',
-    letterSpacing: 4,
-    color: '#4ade80',
+    fontSize: 14,
+    fontFamily: Fonts.pixelBold,
+    letterSpacing: 2,
+    color: Colors.text,
   },
   goldBadge: {
-    borderWidth: 1,
-    borderColor: '#FFD700',
-    borderRadius: 20,
-    paddingHorizontal: 10,
+    backgroundColor: '#fff',
+    borderWidth: 2,
+    borderColor: Colors.cardBorder,
+    paddingHorizontal: 8,
     paddingVertical: 4,
   },
-  goldText: { fontWeight: '700', fontSize: 13, color: '#FFD700' },
+  goldText: { fontFamily: Fonts.pixelBold, fontSize: 10, color: Colors.text },
 
   // Hero scene ─────────────────────────────────────────────────────────────────
   heroScene: {
     width: '100%',
-    height: 240,
+    height: 180,
     justifyContent: 'flex-end',
+    borderTopWidth: 4,
+    borderBottomWidth: 4,
+    borderColor: Colors.cardBorder,
   },
   nameOverlay: {
     alignItems: 'center',
     paddingBottom: 14,
     paddingTop: 10,
+    backgroundColor: 'rgba(0,0,0,0.6)',
   },
   heroName: {
-    fontSize: 22,
-    fontWeight: '900',
-    letterSpacing: 3,
-    color: '#4ade80',
+    fontSize: 18,
+    fontFamily: Fonts.pixelBold,
+    letterSpacing: 2,
+    color: '#fff',
     textShadowColor: '#000',
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 4,
+    textShadowOffset: { width: 2, height: 2 },
+    textShadowRadius: 0,
   },
   heroLevel: {
     fontSize: 10,
-    fontWeight: '700',
-    letterSpacing: 2,
-    color: '#FFD700',
-    textTransform: 'uppercase',
-    marginTop: 3,
+    fontFamily: Fonts.pixelBold,
+    letterSpacing: 1,
+    color: Colors.gold,
+    marginTop: 6,
+    textShadowColor: '#000',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 0,
   },
 
   // Quest section ──────────────────────────────────────────────────────────────
-  scrollContent: { paddingTop: 16, paddingBottom: 8 },
+  scrollContent: { paddingTop: 16, paddingBottom: 100 },
 
   questHeader: {
     flexDirection: 'row',
@@ -370,12 +403,22 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   questTitle: {
-    fontSize: 13,
-    fontWeight: '700',
+    fontSize: 12,
+    fontFamily: Fonts.pixelBold,
     letterSpacing: 2,
-    textTransform: 'uppercase',
+    color: '#fff',
+    textShadowColor: '#000',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 0,
   },
-  viewAll: { fontSize: 11, fontWeight: '700', letterSpacing: 1 },
+  viewAll: { 
+    fontSize: 10, 
+    fontFamily: Fonts.pixelBold, 
+    color: Colors.gold,
+    textShadowColor: '#000',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 0,
+  },
 
   // 2-column grid ──────────────────────────────────────────────────────────────
   questGrid: {
@@ -386,120 +429,185 @@ const styles = StyleSheet.create({
   },
   questCard: {
     width: '47%',
-    borderRadius: 14,
-    borderWidth: 1,
-    padding: 14,
+    backgroundColor: Colors.card,
+    borderWidth: 4,
+    padding: 12,
     gap: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 4, height: 4 },
+    shadowOpacity: 1,
+    shadowRadius: 0,
+    elevation: 0,
   },
   questIconBg: {
-    width: 36,
-    height: 36,
-    borderRadius: 9,
+    width: 32,
+    height: 32,
+    backgroundColor: '#fff',
+    borderWidth: 2,
+    borderColor: Colors.cardBorder,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  questText:    { fontSize: 12, fontWeight: '700', lineHeight: 16 },
-  progressBg:   { height: 3, borderRadius: 2, overflow: 'hidden' },
-  progressFill: { height: 3, borderRadius: 2 },
-  questReward:  { fontSize: 11, fontWeight: '700' },
+  questText: { 
+    fontSize: 15, 
+    fontFamily: Fonts.pixel, 
+    color: Colors.text, 
+    lineHeight: 18 
+  },
+  progressBg: { 
+    height: 6, 
+    backgroundColor: '#000', 
+    borderWidth: 1, 
+    borderColor: Colors.cardBorder 
+  },
+  progressFill: { height: '100%' },
+  questReward:  { fontSize: 10, fontFamily: Fonts.pixelBold },
 
   parentLink: {
     alignItems: 'center',
     flexDirection: 'row',
     justifyContent: 'center',
-    paddingVertical: 20,
-  },
-  parentLinkText: { fontSize: 13 },
-
-  // Flare button ───────────────────────────────────────────────────────────────
-  flareWrapper: { paddingHorizontal: 16, paddingVertical: 10 },
-  flareButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 10,
-    paddingVertical: 18,
-    borderRadius: 14,
-    shadowOffset: { width: 0, height: 6 },
+    paddingVertical: 16,
+    marginHorizontal: 32,
+    marginTop: 20,
+    backgroundColor: Colors.card,
+    borderWidth: 4,
+    borderColor: Colors.cardBorder,
+    shadowColor: '#000',
+    shadowOffset: { width: 4, height: 4 },
     shadowOpacity: 1,
     shadowRadius: 0,
-    elevation: 8,
+    elevation: 0,
   },
-  flareText: {
+  parentLinkText: { 
+    fontSize: 10, 
+    fontFamily: Fonts.pixelBold, 
+    color: Colors.text, 
+    marginLeft: 8 
+  },
+
+  // Flare button ───────────────────────────────────────────────────────────────
+  flareWrapper: { position: 'absolute', bottom: 0, left: 0, right: 0 },
+  emergencyButton: {
+    backgroundColor: Colors.healthRed,
+    paddingVertical: 24,
+    paddingBottom: 40,
+    alignItems: 'center',
+    borderTopWidth: 6,
+    borderColor: '#000',
+  },
+  emergencyText: { 
     color: '#fff',
-    fontWeight: '900',
-    fontSize: 18,
-    letterSpacing: 2,
-    textTransform: 'uppercase',
+    fontFamily: Fonts.pixelBold,
+    fontSize: 12,
+    textShadowColor: '#000',
+    textShadowOffset: { width: 2, height: 2 },
+    textShadowRadius: 0,
   },
 
   // Quest detail modal ─────────────────────────────────────────────────────────
   backdrop: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.65)',
+    backgroundColor: 'rgba(0,0,0,0.7)',
     alignItems: 'center',
     justifyContent: 'center',
   },
   questModal: {
-    width: '82%',
-    borderRadius: 20,
-    borderWidth: 1,
+    width: '88%',
+    backgroundColor: Colors.card,
+    borderWidth: 4,
+    borderColor: Colors.cardBorder,
     padding: 24,
     alignItems: 'center',
-    gap: 14,
+    gap: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 4, height: 4 },
+    shadowOpacity: 1,
+    shadowRadius: 0,
+    elevation: 0,
   },
   questModalIcon: {
     width: 64,
     height: 64,
-    borderRadius: 16,
+    backgroundColor: '#fff',
+    borderWidth: 4,
+    borderColor: Colors.cardBorder,
     alignItems: 'center',
     justifyContent: 'center',
   },
   questModalTitle: {
-    fontSize: 17,
-    fontWeight: '900',
-    letterSpacing: 1,
+    fontSize: 12,
+    fontFamily: Fonts.pixelBold,
+    color: Colors.text,
     textAlign: 'center',
-    textTransform: 'uppercase',
+    lineHeight: 18,
   },
   questModalDesc: {
-    fontSize: 13,
-    lineHeight: 20,
+    fontSize: 18,
+    fontFamily: Fonts.pixel,
+    color: Colors.text,
     textAlign: 'center',
+    lineHeight: 24,
   },
   completeBtn: {
     width: '100%',
+    borderWidth: 4,
+    borderColor: Colors.cardBorder,
     paddingVertical: 14,
-    borderRadius: 12,
     alignItems: 'center',
-    marginTop: 4,
+    marginTop: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 4, height: 4 },
+    shadowOpacity: 1,
+    shadowRadius: 0,
+    elevation: 0,
   },
-  completeBtnText: { fontWeight: '800', fontSize: 14, letterSpacing: 0.5 },
-  closeBtn: { paddingVertical: 6 },
-  closeBtnText: { fontSize: 13, fontWeight: '600' },
+  completeBtnText: { 
+    fontFamily: Fonts.pixelBold, 
+    fontSize: 10 
+  },
+  closeBtn: { paddingVertical: 12 },
+  closeBtnText: { 
+    fontSize: 10, 
+    fontFamily: Fonts.pixelBold, 
+    color: Colors.text, 
+    textDecorationLine: 'underline' 
+  },
 
   // View All modal ─────────────────────────────────────────────────────────────
   allQuestsModal: {
-    width: '88%',
-    maxHeight: '70%',
-    borderRadius: 20,
-    borderWidth: 1,
+    width: '90%',
+    maxHeight: '75%',
+    backgroundColor: Colors.card,
+    borderWidth: 4,
+    borderColor: Colors.cardBorder,
     padding: 20,
-    gap: 8,
+    gap: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 4, height: 4 },
+    shadowOpacity: 1,
+    shadowRadius: 0,
+    elevation: 0,
   },
   allQuestsTitle: {
-    fontSize: 16,
-    fontWeight: '900',
-    letterSpacing: 2,
-    textTransform: 'uppercase',
-    marginBottom: 4,
+    fontSize: 14,
+    fontFamily: Fonts.pixelBold,
+    color: Colors.text,
+    textAlign: 'center',
+    marginBottom: 8,
   },
   allQuestRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
     paddingVertical: 12,
-    borderBottomWidth: 1,
+    borderBottomWidth: 2,
+    borderBottomColor: Colors.cardBorder,
   },
-  allQuestText: { flex: 1, fontSize: 13, fontWeight: '600' },
+  allQuestText: { 
+    flex: 1, 
+    fontSize: 18, 
+    fontFamily: Fonts.pixel, 
+    color: Colors.text 
+  },
 });

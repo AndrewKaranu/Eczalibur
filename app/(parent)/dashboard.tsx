@@ -1,9 +1,11 @@
 import { MaterialIcons } from '@expo/vector-icons';
-import { router, Redirect } from 'expo-router';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useAuth } from '@clerk/clerk-expo';
+import { Redirect, router } from 'expo-router';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useTheme } from '@/context/ThemeContext';
 import { useAppStore } from '@/store/useAppStore';
 import type { RedemptionRequest, Zone } from '@/lib/types';
+import { Colors, Fonts } from '@/constants/theme';
 
 const ZONE_CONFIG: Record<Zone, { label: string; color: string; bg: string; border: string }> = {
   green: { label: '🟢 Green — Controlled', color: '#4ade80', bg: '#0d2b0d', border: '#4ade80' },
@@ -12,14 +14,23 @@ const ZONE_CONFIG: Record<Zone, { label: string; color: string; bg: string; bord
 };
 
 export default function ParentDashboard() {
-  const { theme, isDark, toggleTheme } = useTheme();
-  const { isHydrated, profile, flareLogs, points, redemptions, currentZone, resolveRedemption, awardPoints } =
-    useAppStore();
+  const { signOut } = useAuth();
+  const { toggleTheme } = useTheme();
+  const {
+    isHydrated,
+    profile,
+    flareLogs,
+    points,
+    redemptions,
+    currentZone,
+    resolveRedemption,
+    awardPoints,
+  } = useAppStore();
 
   if (!isHydrated) {
     return (
-      <View style={[styles.loading, { backgroundColor: theme.bgPrimary }]}>
-        <ActivityIndicator color={theme.gold} size="large" />
+      <View style={styles.loading}>
+        <Text style={{ fontFamily: Fonts.pixelBold, color: '#fff', fontSize: 16 }}>LOADING...</Text>
       </View>
     );
   }
@@ -31,7 +42,7 @@ export default function ParentDashboard() {
   async function handleResolve(r: RedemptionRequest, decision: 'approved' | 'denied') {
     await resolveRedemption(r.id, decision);
     if (decision === 'denied') {
-      await awardPoints(r.pointCost);
+      await awardPoints(r.pointCost); // Refund points if denied
     }
   }
 
@@ -40,69 +51,65 @@ export default function ParentDashboard() {
 
   return (
     <ScrollView
-      style={[styles.container, { backgroundColor: theme.bgPrimary }]}
+      style={styles.container}
       contentContainerStyle={styles.scrollContent}
+      showsVerticalScrollIndicator={false}
     >
       {/* Top Bar */}
-      <View style={[styles.topBar, { backgroundColor: theme.bgNav }]}>
+      <View style={styles.topBar}>
         <TouchableOpacity onPress={toggleTheme}>
-          <MaterialIcons name={isDark ? 'light-mode' : 'dark-mode'} size={22} color={theme.green} />
+          <Text style={{ fontSize: 18 }}>🌗</Text>
         </TouchableOpacity>
-        <Text style={[styles.topTitle, { color: theme.green }]}>ECZCALIBUR</Text>
+        <Text style={styles.topTitle}>KINGDOM OVERVIEW</Text>
         <TouchableOpacity onPress={() => router.push('/(parent)/settings')}>
-          <MaterialIcons name="settings" size={22} color={theme.textMuted} />
+          <MaterialIcons name="settings" size={22} color={Colors.text} />
         </TouchableOpacity>
       </View>
 
-      {/* Greeting */}
-      <Text style={[styles.greeting, { color: theme.textMuted }]}>Welcome back,</Text>
-      <Text style={[styles.childName, { color: theme.gold }]}>{profile.name}'s Quest</Text>
+      <Text style={styles.childName}>{profile.name}&apos;s Quest</Text>
 
       {/* Zone card */}
-      <View style={[styles.zoneCard, { borderColor: zc.border, backgroundColor: zc.bg }]}>
-        <Text style={[styles.cardLabel, { color: theme.textMuted }]}>CURRENT ZONE</Text>
+      <View style={styles.zoneCard}>
+        <Text style={styles.cardLabel}>CURRENT ZONE</Text>
         <Text style={[styles.cardValue, { color: zc.color }]}>{zc.label}</Text>
       </View>
 
       {/* Stats row */}
       <View style={styles.statsRow}>
-        <View style={[styles.statCard, { backgroundColor: theme.bgCard, borderColor: theme.border }]}>
-          <Text style={[styles.statValue, { color: theme.gold }]}>{flareLogs.length}</Text>
-          <Text style={[styles.statLabel, { color: theme.textMuted }]}>Total Logs</Text>
+        <View style={styles.statCard}>
+          <Text style={styles.statValue}>{flareLogs.length}</Text>
+          <Text style={styles.statLabel}>Total Logs</Text>
         </View>
-        <View style={[styles.statCard, { backgroundColor: theme.bgCard, borderColor: theme.border }]}>
-          <Text style={[styles.statValue, { color: theme.gold }]}>🪙 {points.total}</Text>
-          <Text style={[styles.statLabel, { color: theme.textMuted }]}>Points Balance</Text>
+        <View style={styles.statCard}>
+          <Text style={styles.statValue}>🪙 {points.total}</Text>
+          <Text style={styles.statLabel}>Points Balance</Text>
         </View>
       </View>
 
       {/* Pending redemption requests */}
       {redemptions.filter((r) => r.status === 'pending').length > 0 && (
         <View style={styles.redemptionSection}>
-          <Text style={[styles.redemptionTitle, { color: theme.gold }]}>🎁 Prize Requests</Text>
+          <Text style={styles.redemptionTitle}>🎁 Prize Requests</Text>
           {redemptions
             .filter((r) => r.status === 'pending')
             .map((r) => (
-              <View
-                key={r.id}
-                style={[styles.redemptionCard, { backgroundColor: theme.bgCard, borderColor: theme.gold }]}
-              >
+              <View key={r.id} style={styles.redemptionCard}>
                 <View style={styles.redemptionInfo}>
-                  <Text style={[styles.redemptionName, { color: theme.textPrimary }]}>{r.prizeName}</Text>
-                  <Text style={[styles.redemptionCost, { color: theme.gold }]}>🪙 {r.pointCost} pts</Text>
+                  <Text style={styles.redemptionName}>{r.prizeName}</Text>
+                  <Text style={styles.redemptionCost}>🪙 {r.pointCost} pts</Text>
                 </View>
                 <View style={styles.redemptionActions}>
                   <TouchableOpacity
-                    style={[styles.resolveBtn, { backgroundColor: theme.zoneGreen }]}
+                    style={[styles.resolveBtn, { backgroundColor: Colors.background }]}
                     onPress={() => handleResolve(r, 'approved')}
                   >
-                    <Text style={[styles.resolveBtnText, { color: theme.bgNav }]}>✓ Approve</Text>
+                    <Text style={styles.resolveBtnText}>✓ Approve</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
-                    style={[styles.resolveBtn, { backgroundColor: theme.bgCard, borderWidth: 1, borderColor: theme.zoneRed }]}
+                    style={[styles.resolveBtn, { backgroundColor: Colors.healthRed }]}
                     onPress={() => handleResolve(r, 'denied')}
                   >
-                    <Text style={[styles.resolveBtnText, { color: theme.zoneRed }]}>✕ Deny</Text>
+                    <Text style={styles.resolveBtnText}>✕ Deny</Text>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -111,105 +118,236 @@ export default function ParentDashboard() {
       )}
 
       {/* Switch to child view */}
-      <TouchableOpacity
-        style={[styles.childViewBtn, { backgroundColor: theme.bgCard, borderColor: theme.borderActive }]}
-        onPress={() => router.push('/(child)/home')}
-      >
-        <MaterialIcons name="child-care" size={20} color={theme.green} />
-        <Text style={[styles.childViewText, { color: theme.green }]}>Switch to Child View</Text>
+      <TouchableOpacity style={styles.childButton} onPress={() => router.push('/(child)/home')}>
+        <Text style={styles.childButtonText}>START QUEST (CHILD VIEW)</Text>
       </TouchableOpacity>
 
+      {/* Sign Out */}
+      <TouchableOpacity style={styles.signOutButton} onPress={() => signOut()}>
+        <Text style={styles.signOutText}>SAVE & QUIT (Sign Out)</Text>
+      </TouchableOpacity>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  loading: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  container: { flex: 1 },
-  scrollContent: { paddingBottom: 40, gap: 16 },
+  loading: {
+    flex: 1,
+    backgroundColor: 'transparent',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  container: {
+    flex: 1,
+    backgroundColor: 'transparent',
+  },
+  scrollContent: {
+    paddingBottom: 60,
+    paddingTop: 48,
+    gap: 16,
+  },
 
   topBar: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    backgroundColor: Colors.card,
+    borderWidth: 4,
+    borderColor: Colors.cardBorder,
+    marginHorizontal: 24,
     paddingHorizontal: 16,
-    paddingTop: 52,
-    paddingBottom: 12,
+    paddingVertical: 12,
     shadowColor: '#000',
-    shadowOpacity: 0.4,
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: { width: 4, height: 4 },
+    shadowOpacity: 1,
     shadowRadius: 0,
-    elevation: 8,
-    marginBottom: 8,
+    elevation: 0,
   },
   topTitle: {
     flex: 1,
     textAlign: 'center',
-    fontSize: 16,
-    fontWeight: '900',
-    letterSpacing: 4,
+    fontSize: 12,
+    fontFamily: Fonts.pixelBold,
+    letterSpacing: 2,
+    color: Colors.text,
   },
 
-  greeting: { paddingHorizontal: 24, fontSize: 16 },
-  childName: { paddingHorizontal: 24, fontSize: 28, fontWeight: 'bold' },
+  childName: {
+    fontFamily: Fonts.pixelBold,
+    color: '#fff',
+    fontSize: 24,
+    textAlign: 'center',
+    marginBottom: 4,
+    textShadowColor: '#000',
+    textShadowOffset: { width: 2, height: 2 },
+    textShadowRadius: 0,
+  },
 
   zoneCard: {
-    borderRadius: 16,
+    backgroundColor: Colors.card,
     padding: 20,
-    borderWidth: 2,
+    marginHorizontal: 24,
+    borderWidth: 4,
+    borderColor: Colors.cardBorder,
     alignItems: 'center',
-    gap: 8,
+    gap: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 4, height: 4 },
+    shadowOpacity: 1,
+    shadowRadius: 0,
+    elevation: 0,
+  },
+  cardLabel: {
+    fontFamily: Fonts.pixelBold,
+    color: Colors.text,
+    fontSize: 10,
+    opacity: 0.8,
+  },
+  cardValue: {
+    fontFamily: Fonts.pixelBold,
+    fontSize: 18,
+    textShadowColor: '#000',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 0,
+    marginTop: 4,
+  },
+
+  statsRow: {
+    flexDirection: 'row',
+    gap: 16,
     marginHorizontal: 24,
   },
-  cardLabel: { fontSize: 11, letterSpacing: 2, fontWeight: '600' },
-  cardValue: { fontSize: 18, fontWeight: 'bold' },
-
-  statsRow: { flexDirection: 'row', gap: 12, paddingHorizontal: 24 },
   statCard: {
     flex: 1,
-    borderRadius: 14,
-    borderWidth: 1,
+    backgroundColor: Colors.card,
+    borderWidth: 4,
+    borderColor: Colors.cardBorder,
     padding: 16,
     alignItems: 'center',
-    gap: 4,
+    gap: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 4, height: 4 },
+    shadowOpacity: 1,
+    shadowRadius: 0,
+    elevation: 0,
   },
-  statValue: { fontSize: 22, fontWeight: 'bold' },
-  statLabel: { fontSize: 11, letterSpacing: 1, fontWeight: '600' },
+  statValue: {
+    fontFamily: Fonts.pixelBold,
+    color: Colors.text,
+    fontSize: 16,
+  },
+  statLabel: {
+    fontFamily: Fonts.pixelBold,
+    color: Colors.text,
+    fontSize: 9,
+    textAlign: 'center',
+    opacity: 0.8,
+  },
 
-  childViewBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 10,
+  redemptionSection: {
+    gap: 12,
     marginHorizontal: 24,
-    paddingVertical: 16,
-    borderRadius: 14,
-    borderWidth: 2,
+    marginTop: 8,
   },
-  childViewText: { fontSize: 15, fontWeight: '700', letterSpacing: 0.5 },
-
-  resetBtn: {
-    marginHorizontal: 24,
-    marginTop: 4,
-    paddingVertical: 12,
-    borderRadius: 12,
-    borderWidth: 1,
-    alignItems: 'center',
+  redemptionTitle: {
+    fontFamily: Fonts.pixelBold,
+    color: '#fff',
+    fontSize: 12,
+    textShadowColor: '#000',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 0,
   },
-  resetText: { fontSize: 12, fontWeight: '600', letterSpacing: 0.5 },
-
-  redemptionSection: { gap: 10, paddingHorizontal: 24 },
-  redemptionTitle: { fontSize: 15, fontWeight: '700', letterSpacing: 0.5 },
   redemptionCard: {
-    borderRadius: 14,
-    borderWidth: 1,
-    padding: 14,
-    gap: 10,
+    backgroundColor: Colors.card,
+    borderWidth: 4,
+    borderColor: Colors.cardBorder,
+    padding: 16,
+    gap: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 4, height: 4 },
+    shadowOpacity: 1,
+    shadowRadius: 0,
+    elevation: 0,
   },
-  redemptionInfo: { gap: 2 },
-  redemptionName: { fontSize: 15, fontWeight: '600' },
-  redemptionCost: { fontSize: 13 },
-  redemptionActions: { flexDirection: 'row', gap: 10 },
-  resolveBtn: { flex: 1, borderRadius: 10, paddingVertical: 10, alignItems: 'center' },
-  resolveBtnText: { fontSize: 13, fontWeight: 'bold' },
+  redemptionInfo: {
+    gap: 6,
+  },
+  redemptionName: {
+    fontFamily: Fonts.pixelBold,
+    color: Colors.text,
+    fontSize: 12,
+    lineHeight: 18,
+  },
+  redemptionCost: {
+    fontFamily: Fonts.pixelBold,
+    color: Colors.gold,
+    fontSize: 12,
+    textShadowColor: '#000',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 0,
+  },
+  redemptionActions: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 4,
+  },
+  resolveBtn: {
+    flex: 1,
+    borderWidth: 4,
+    borderColor: Colors.cardBorder,
+    paddingVertical: 12,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 2, height: 2 },
+    shadowOpacity: 1,
+    shadowRadius: 0,
+    elevation: 0,
+  },
+  resolveBtnText: {
+    fontFamily: Fonts.pixelBold,
+    color: '#fff',
+    fontSize: 10,
+    textShadowColor: '#000',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 0,
+  },
+
+  childButton: {
+    backgroundColor: Colors.primary,
+    marginHorizontal: 24,
+    borderWidth: 4,
+    borderColor: Colors.cardBorder,
+    paddingHorizontal: 16,
+    paddingVertical: 20,
+    marginTop: 16,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 4, height: 4 },
+    shadowOpacity: 1,
+    shadowRadius: 0,
+    elevation: 0,
+  },
+  childButtonText: {
+    fontFamily: Fonts.pixelBold,
+    color: '#fff',
+    fontSize: 12,
+    textShadowColor: '#000',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 0,
+  },
+
+  signOutButton: {
+    paddingVertical: 16,
+    marginTop: 8,
+    alignItems: 'center',
+  },
+  signOutText: {
+    fontFamily: Fonts.pixelBold,
+    color: '#fff',
+    fontSize: 10,
+    textDecorationLine: 'underline',
+    textShadowColor: '#000',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 0,
+  },
 });

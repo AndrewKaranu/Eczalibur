@@ -1,21 +1,23 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { useAuth } from '@clerk/clerk-expo';
 import { Redirect, Tabs } from 'expo-router';
-import { TextStyle, ViewStyle } from 'react-native';
+import { Platform, TextStyle, ViewStyle } from 'react-native';
+
+import { Colors, Fonts } from '@/constants/theme';
 
 const tabBarStyle: ViewStyle = {
-  backgroundColor: '#020b02',
+  backgroundColor: Colors.card,
   borderTopWidth: 4,
-  borderTopColor: 'rgba(10,106,29,0.30)',
-  height: 72,
-  paddingBottom: 10,
+  borderTopColor: Colors.cardBorder,
+  height: Platform.OS === 'ios' ? 88 : 72,
+  paddingBottom: Platform.OS === 'ios' ? 24 : 10,
+  paddingTop: 8,
 };
 
 const tabLabelStyle: TextStyle = {
-  fontSize: 10,
-  fontWeight: '700',
-  letterSpacing: 1,
-  textTransform: 'uppercase',
+  fontFamily: Fonts.pixelBold,
+  fontSize: 8,
+  marginTop: 4,
 };
 
 export default function ParentLayout() {
@@ -29,16 +31,17 @@ export default function ParentLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
+        sceneContainerStyle: { backgroundColor: 'transparent' },
         tabBarStyle,
-        tabBarActiveTintColor: '#FFD700',
-        tabBarInactiveTintColor: 'rgba(242,249,234,0.40)',
+        tabBarActiveTintColor: Colors.primary,
+        tabBarInactiveTintColor: 'rgba(0,0,0,0.4)',
         tabBarLabelStyle: tabLabelStyle,
       }}
     >
       <Tabs.Screen
         name="dashboard"
         options={{
-          title: 'Overview',
+          title: 'OVERVIEW',
           tabBarIcon: ({ color, size }) => (
             <MaterialIcons name="home" size={size} color={color} />
           ),
@@ -47,7 +50,7 @@ export default function ParentLayout() {
       <Tabs.Screen
         name="logs"
         options={{
-          title: 'Logs',
+          title: 'LOGS',
           tabBarIcon: ({ color, size }) => (
             <MaterialIcons name="list" size={size} color={color} />
           ),
@@ -56,7 +59,7 @@ export default function ParentLayout() {
       <Tabs.Screen
         name="appointment"
         options={{
-          title: 'Reports',
+          title: 'REPORTS',
           tabBarIcon: ({ color, size }) => (
             <MaterialIcons name="event" size={size} color={color} />
           ),
@@ -65,7 +68,7 @@ export default function ParentLayout() {
       <Tabs.Screen
         name="chat"
         options={{
-          title: 'Claude',
+          title: 'CLAUDE',
           tabBarIcon: ({ color, size }) => (
             <MaterialIcons name="chat" size={size} color={color} />
           ),

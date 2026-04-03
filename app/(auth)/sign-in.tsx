@@ -12,6 +12,8 @@ import {
   View,
 } from 'react-native';
 
+import { Colors, Fonts } from '@/constants/theme';
+
 export default function SignInScreen() {
   const { signIn, setActive, isLoaded } = useSignIn();
   const [email, setEmail] = useState('');
@@ -118,74 +120,80 @@ export default function SignInScreen() {
   return (
     <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       <View style={styles.inner}>
-        <Text style={styles.title}>Eczcalibur</Text>
+        <Text style={styles.title}>ECZCALIBUR</Text>
 
         {stage === 'credentials' ? (
           <>
-            <Text style={styles.subtitle}>Sign in to continue</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Username"
-              placeholderTextColor="#888"
-              autoCapitalize="none"
-              keyboardType="default"
-              value={email}
-              onChangeText={setEmail}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Password"
-              placeholderTextColor="#888"
-              secureTextEntry
-              value={password}
-              onChangeText={setPassword}
-            />
-            {error ? <Text style={styles.error}>{error}</Text> : null}
+            <Text style={styles.subtitle}>START YOUR QUEST</Text>
+            <View style={styles.card}>
+              <TextInput
+                style={styles.input}
+                placeholder="Username"
+                placeholderTextColor="#7a5b42"
+                autoCapitalize="none"
+                keyboardType="default"
+                value={email}
+                onChangeText={setEmail}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Password"
+                placeholderTextColor="#7a5b42"
+                secureTextEntry
+                value={password}
+                onChangeText={setPassword}
+              />
+              {error ? <Text style={styles.error}>{error}</Text> : null}
+            </View>
             <TouchableOpacity style={[styles.button, loading && styles.buttonDisabled]} onPress={handleSignIn} disabled={loading}>
-              {loading ? <ActivityIndicator color="#1a1a2e" /> : <Text style={styles.buttonText}>Sign In</Text>}
+              {loading ? <Text style={styles.buttonText}>LOADING...</Text> : <Text style={styles.buttonText}>ENTER</Text>}
             </TouchableOpacity>
           </>
         ) : stage === 'otp' ? (
           <>
-            <Text style={styles.subtitle}>Check your email for a verification code</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="6-digit code"
-              placeholderTextColor="#888"
-              keyboardType="number-pad"
-              maxLength={6}
-              value={otp}
-              onChangeText={setOtp}
-              autoFocus
-            />
-            {error ? <Text style={styles.error}>{error}</Text> : null}
+            <Text style={styles.subtitle}>A SCROLL HAS BEEN SENT</Text>
+            <View style={styles.card}>
+              <TextInput
+                style={styles.input}
+                placeholder="6-digit seal"
+                placeholderTextColor="#7a5b42"
+                keyboardType="number-pad"
+                maxLength={6}
+                value={otp}
+                onChangeText={setOtp}
+                autoFocus
+              />
+              {error ? <Text style={styles.error}>{error}</Text> : null}
+            </View>
             <TouchableOpacity style={[styles.button, loading && styles.buttonDisabled]} onPress={handleOtp} disabled={loading}>
-              {loading ? <ActivityIndicator color="#1a1a2e" /> : <Text style={styles.buttonText}>Verify</Text>}
+              {loading ? <Text style={styles.buttonText}>VERIFYING...</Text> : <Text style={styles.buttonText}>BREAK SEAL</Text>}
             </TouchableOpacity>
             <TouchableOpacity onPress={() => { setStage('credentials'); setError(null); setOtp(''); }}>
-              <Text style={styles.backLink}>← Back</Text>
+              <Text style={styles.backLink}>← RETURN</Text>
             </TouchableOpacity>
           </>
         ) : (
           <>
-            <Text style={styles.subtitle}>Two-factor authentication required</Text>
-            <Text style={styles.hint}>Dev mode: use code 424242</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Authentication code"
-              placeholderTextColor="#888"
-              keyboardType="number-pad"
-              maxLength={6}
-              value={otp}
-              onChangeText={setOtp}
-              autoFocus
-            />
-            {error ? <Text style={styles.error}>{error}</Text> : null}
+            <Text style={styles.subtitle}>TWO-FACTOR GUARD</Text>
+            <Text style={styles.hint}>(Hint: use code 424242)</Text>
+            <View style={styles.card}>
+              <TextInput
+                style={styles.input}
+                placeholder="Auth code"
+                placeholderTextColor="#7a5b42"
+                keyboardType="number-pad"
+                maxLength={6}
+                value={otp}
+                onChangeText={setOtp}
+                autoFocus
+              />
+              {error ? <Text style={styles.error}>{error}</Text> : null}
+            </View>
             <TouchableOpacity style={[styles.button, loading && styles.buttonDisabled]} onPress={handleOtp2} disabled={loading}>
-              {loading ? <ActivityIndicator color="#1a1a2e" /> : <Text style={styles.buttonText}>Verify 2FA</Text>}
+              {loading ? <Text style={styles.buttonText}>VERIFYING...</Text> : <Text style={styles.buttonText}>VERIFY</Text>}
             </TouchableOpacity>
             <TouchableOpacity onPress={() => { setStage('credentials'); setError(null); setOtp(''); }}>
-              <Text style={styles.backLink}>← Back</Text>
+              <Text style={styles.backLink}>← RETURN</Text>
             </TouchableOpacity>
           </>
         )}
@@ -195,15 +203,16 @@ export default function SignInScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#1a1a2e' },
+  container: { flex: 1, backgroundColor: Colors.background },
   inner: { flex: 1, justifyContent: 'center', paddingHorizontal: 32, gap: 16 },
-  title: { fontSize: 36, fontWeight: 'bold', color: '#f5c842', textAlign: 'center', marginBottom: 4 },
-  subtitle: { fontSize: 16, color: '#aaa', textAlign: 'center', marginBottom: 16 },
-  input: { height: 52, backgroundColor: '#2a2a3e', borderRadius: 12, paddingHorizontal: 16, color: '#fff', fontSize: 16, borderWidth: 1, borderColor: '#3a3a5e' },
-  error: { color: '#ff6b6b', fontSize: 14, textAlign: 'center' },
-  button: { height: 52, backgroundColor: '#f5c842', borderRadius: 12, alignItems: 'center', justifyContent: 'center', marginTop: 8 },
+  title: { fontFamily: Fonts.pixelBold, fontSize: 32, color: Colors.text, textAlign: 'center', marginBottom: 8, textShadowColor: '#ffffff', textShadowOffset: {width: 2, height: 2}, textShadowRadius: 0 },
+  subtitle: { fontFamily: Fonts.pixelBold, fontSize: 14, color: Colors.text, textAlign: 'center', marginBottom: 16 },
+  card: { backgroundColor: Colors.card, padding: 16, borderWidth: 4, borderColor: Colors.cardBorder, gap: 12 },
+  input: { height: 48, backgroundColor: '#e8ddc5', paddingHorizontal: 16, color: Colors.text, fontSize: 24, fontFamily: Fonts.pixel, borderWidth: 2, borderColor: Colors.cardBorder },
+  error: { fontFamily: Fonts.pixel, color: Colors.healthRed, fontSize: 20, textAlign: 'center' },
+  button: { height: 56, backgroundColor: Colors.primary, borderWidth: 4, borderColor: Colors.cardBorder, alignItems: 'center', justifyContent: 'center', marginTop: 16, shadowColor: '#000', shadowOffset: {width: 4, height: 4}, shadowOpacity: 1, shadowRadius: 0, elevation: 0 },
   buttonDisabled: { opacity: 0.6 },
-  buttonText: { color: '#1a1a2e', fontSize: 16, fontWeight: 'bold' },
-  backLink: { color: '#888', fontSize: 14, textAlign: 'center', marginTop: 4 },
-  hint: { color: '#f5c842', fontSize: 12, textAlign: 'center', opacity: 0.7 },
+  buttonText: { fontFamily: Fonts.pixelBold, color: '#fff', fontSize: 16, textShadowColor: '#000', textShadowOffset: {width: 2, height: 2}, textShadowRadius: 0 },
+  backLink: { fontFamily: Fonts.pixelBold, color: Colors.text, fontSize: 12, textAlign: 'center', marginTop: 8 },
+  hint: { fontFamily: Fonts.pixel, color: Colors.text, fontSize: 18, textAlign: 'center', opacity: 0.8 },
 });

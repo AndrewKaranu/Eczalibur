@@ -70,7 +70,7 @@ export const GENERATE_PLAN_USER_TEMPLATE = (params: {
   childName: string;
   age: number;
   diagnosis: string;
-  medications: Array<{ name: string; frequency: string; instructions: string }>;
+  medications: { name: string; frequency: string; instructions: string }[];
   triggers: string[];
   affectedAreas: string[];
   temperature: number;
@@ -158,7 +158,7 @@ export const APPOINTMENT_SUMMARY_USER_TEMPLATE = (params: {
   childName: string;
   age: number;
   diagnosis: string;
-  medications: Array<{ name: string; frequency: string; instructions: string }>;
+  medications: { name: string; frequency: string; instructions: string }[];
   affectedAreas: string[];
   triggers: string[];
   appointmentDate: string;

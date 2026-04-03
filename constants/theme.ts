@@ -1,6 +1,4 @@
-// ─── Zelda-inspired dual-mode theme tokens ───────────────────────────────────
-// Dark: deep forest night (#050805) + emerald green + gold + purple accents
-// Light: parchment sage (#f2f9ea) + forest green + warm gold
+// ─── Zelda-inspired dual-mode theme tokens (Kelvin's logic retained) ────────
 
 export const DARK = {
   bgPrimary:    '#050805',
@@ -50,8 +48,26 @@ export const LIGHT = {
 
 export type Theme = typeof DARK | typeof LIGHT;
 
-// Backwards-compat shim for boilerplate files that still reference Colors.light/dark
+// ─── Retro Stardew/Pixel Active Theme Tokens (Main UI override) ─────────────
+
+/**
+ * Pixel Theme colors inspired by Stardew / Zelda
+ */
 export const Colors = {
-  light: { icon: LIGHT.textMuted, tint: LIGHT.green, background: LIGHT.bgPrimary, text: LIGHT.textPrimary, tabIconDefault: LIGHT.textMuted, tabIconSelected: LIGHT.green },
-  dark:  { icon: DARK.textMuted,  tint: DARK.green,  background: DARK.bgPrimary,  text: DARK.textPrimary,  tabIconDefault: DARK.textMuted,  tabIconSelected: DARK.green  },
+  background: 'transparent', // Transparent to allow ImageBackground to show
+  card: '#c6b998', // Stardew menu background (parchment/wood)
+  cardBorder: '#4a3627', // Stardew dark wood border
+  text: '#222222', // Dark brown/black for readable menu text
+  primary: '#c14545', // Retro red header/button
+  accent: '#2f67b1', // Retro blue button
+  borderFocus: '#ffffff', // For highlighting buttons
+  gold: '#ffcf40',
+  healthRed: '#d22c2c',
+  healthBg: '#1f1313',
+  emptyHeart: '#4f3c3c'
+};
+
+export const Fonts = {
+  pixel: 'VT323_400Regular',
+  pixelBold: 'PressStart2P_400Regular',
 };
