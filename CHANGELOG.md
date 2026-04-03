@@ -1,5 +1,27 @@
 # Eczcalibur — Build Changelog
 
+## Phase 9 — Parent Dashboard + Pre-Appointment Summary + Claude Chat (2026-04-02)
+
+**Files created:**
+- `app/(parent)/logs.tsx` — flare log history: FlatList sorted newest-first, zone filter pills (All/🟢/🟡/🔴), zone badge + mood emoji + areas per row, photo indicator, empty state
+- `app/(parent)/appointment.tsx` — pre-appointment summary: date input (YYYY-MM-DD), calls `/api/appointment-summary`, displays Claude-generated clinical summary, share via `expo-sharing` (writes `.txt` to `Paths.cache`)
+- `app/(parent)/chat.tsx` — Claude chat interface: FlatList bubbles (user=gold/right, assistant=dark/left), privacy disclosure banner, POST to `/api/chat` with last 30 logs, inline error bubble on failure, scroll-to-end on new message
+
+**Files modified:**
+- `app/(parent)/dashboard.tsx` — replaced static stub: dynamic zone card from `currentZone()` with ZONE_CONFIG colors, stats row (Total Logs + Points Balance), 2×2 NavGrid (Flare Logs / Appointment Summary / Claude Chat / Child View), converted to ScrollView layout
+
+**API routes consumed (pre-built):**
+- `/api/appointment-summary` — POST `{ profile, logs, appointmentDate }` → `{ summary: string }`
+- `/api/chat` — POST `{ messages, recentLogs, profile }` → `{ message: string }`
+
+**TypeScript:** 0 errors
+
+**expo-file-system v55 note:**
+- Legacy `cacheDirectory` / `EncodingType` / `writeAsStringAsync` exports removed in v55
+- Now uses new class API: `new File(Paths.cache, filename)` + `file.write(content)` + `file.uri`
+
+---
+
 ## Phase 8b — Mobile Verification + Native Fixes (2026-04-02)
 
 **Files modified:**

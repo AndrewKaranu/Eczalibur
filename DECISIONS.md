@@ -110,6 +110,13 @@
 
 ---
 
+### D-016: expo-file-system v55 uses class-based File API
+**Decision:** File writes use `new File(Paths.cache, filename)` + `file.write(content)`, not the legacy `writeAsStringAsync` / `cacheDirectory` / `EncodingType` exports.
+
+**Rationale:** expo-file-system v55 removed the legacy functional exports from the main package entry. The legacy API is still accessible via `expo-file-system/legacy` but throws at runtime from the main entry. The new class-based API is synchronous for writes and provides the `file.uri` string for expo-sharing.
+
+---
+
 ### D-015: Pin expo-crypto and async-storage via npm overrides
 **Decision:** `package.json` uses `"overrides"` to pin `expo-crypto` to `~13.0.2` and `@react-native-async-storage/async-storage` to `2.2.0`.
 
