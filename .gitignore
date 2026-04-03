@@ -52,5 +52,7 @@ app-example
 test-results/
 playwright-report/
 
-# Claude local settings
-.claude/
+# Claude local settings (track .agents, ignore everything else)
+.claude/*
+!.claude/.agents/
+!.claude/.agents/**
