@@ -2,7 +2,7 @@ import { useAuth } from '@clerk/clerk-expo';
 import { Redirect, router } from 'expo-router';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useAppStore } from '@/store/useAppStore';
-import type { Zone } from '@/lib/types';
+import type { RedemptionRequest, Zone } from '@/lib/types';
 
 const ZONE_CONFIG: Record<Zone, { label: string; color: string; bg: string; border: string }> = {
   green: { label: '🟢 Green — Controlled', color: '#4ade80', bg: '#0d2b0d', border: '#4ade80' },
@@ -21,7 +21,14 @@ function NavButton({ icon, label, onPress }: { icon: string; label: string; onPr
 
 export default function ParentDashboard() {
   const { signOut } = useAuth();
-  const { isHydrated, profile, flareLogs, points, currentZone } = useAppStore();
+  const { isHydrated, profile, flareLogs, points, redemptions, currentZone, resolveRedemption, awardPoints } = useAppStore();
+
+  async function handleResolve(r: RedemptionRequest, decision: 'approved' | 'denied') {
+    await resolveRedemption(r.id, decision);
+    if (decision === 'denied') {
+      await awardPoints(r.pointCost); // refund
+    }
+  }
 
   if (!isHydrated) {
     return (
@@ -69,6 +76,37 @@ export default function ParentDashboard() {
         <NavButton icon="💬" label="Claude Chat" onPress={() => router.push('/(parent)/chat')} />
         <NavButton icon="🗡️" label="Child View" onPress={() => router.push('/(child)/home')} />
       </View>
+
+      {/* Redemption requests queue */}
+      {redemptions.filter((r) => r.status === 'pending').length > 0 && (
+        <View style={styles.redemptionSection}>
+          <Text style={styles.redemptionTitle}>🎁 Prize Requests</Text>
+          {redemptions
+            .filter((r) => r.status === 'pending')
+            .map((r) => (
+              <View key={r.id} style={styles.redemptionCard}>
+                <View style={styles.redemptionInfo}>
+                  <Text style={styles.redemptionName}>{r.prizeName}</Text>
+                  <Text style={styles.redemptionCost}>⭐ {r.pointCost} pts</Text>
+                </View>
+                <View style={styles.redemptionActions}>
+                  <TouchableOpacity
+                    style={[styles.resolveBtn, styles.approveBtn]}
+                    onPress={() => handleResolve(r, 'approved')}
+                  >
+                    <Text style={styles.resolveBtnText}>✓ Approve</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.resolveBtn, styles.denyBtn]}
+                    onPress={() => handleResolve(r, 'denied')}
+                  >
+                    <Text style={[styles.resolveBtnText, styles.denyBtnText]}>✕ Deny</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            ))}
+        </View>
+      )}
 
       {/* Sign out */}
       <TouchableOpacity style={styles.signOutButton} onPress={() => signOut()}>
@@ -148,4 +186,28 @@ const styles = StyleSheet.create({
   },
   signOutButton: { paddingVertical: 12, alignItems: 'center', marginTop: 8 },
   signOutText: { color: '#555', fontSize: 14 },
+  redemptionSection: { gap: 10 },
+  redemptionTitle: { color: '#FFD700', fontSize: 15, fontWeight: '700', letterSpacing: 0.5 },
+  redemptionCard: {
+    backgroundColor: '#2a2a3e',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#FFD700',
+    padding: 14,
+    gap: 10,
+  },
+  redemptionInfo: { gap: 2 },
+  redemptionName: { color: '#fff', fontSize: 15, fontWeight: '600' },
+  redemptionCost: { color: '#FFD700', fontSize: 13 },
+  redemptionActions: { flexDirection: 'row', gap: 10 },
+  resolveBtn: {
+    flex: 1,
+    borderRadius: 10,
+    paddingVertical: 10,
+    alignItems: 'center',
+  },
+  approveBtn: { backgroundColor: '#4ade80' },
+  denyBtn: { backgroundColor: '#2a2a3e', borderWidth: 1, borderColor: '#ff4444' },
+  resolveBtnText: { color: '#1a1a2e', fontSize: 13, fontWeight: 'bold' },
+  denyBtnText: { color: '#ff4444' },
 });
