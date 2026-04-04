@@ -13,6 +13,7 @@ import {
 import { router } from 'expo-router';
 import { useAppStore } from '@/store/useAppStore';
 import type { ChatMessage } from '@/lib/types';
+import { Colors, Fonts } from '@/constants/theme';
 
 export default function ChatScreen() {
   const { isHydrated, profile, flareLogs } = useAppStore();
@@ -31,7 +32,7 @@ export default function ChatScreen() {
   if (!isHydrated) {
     return (
       <View style={styles.loadingScreen}>
-        <ActivityIndicator color="#FFD700" size="large" />
+        <ActivityIndicator color={Colors.gold} size="large" />
       </View>
     );
   }
@@ -87,23 +88,20 @@ export default function ChatScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
     >
-      {/* Header */}
       <View style={styles.headerRow}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-          <Text style={styles.backText}>← Back</Text>
+          <Text style={styles.backText}>← BACK</Text>
         </TouchableOpacity>
-        <Text style={styles.title}>Claude Chat</Text>
+        <Text style={styles.title}>CAVE MAGE</Text>
         <View style={styles.headerSpacer} />
       </View>
 
-      {/* Privacy banner */}
       <View style={styles.disclosureBanner}>
         <Text style={styles.disclosureText}>
-          🔒 Your data is shared with Claude only for this conversation. Not stored on any server.
+          🔒 Your data is shared with the AI Mage only for this conversation. Not stored on any server.
         </Text>
       </View>
 
-      {/* Message list */}
       <FlatList
         ref={flatListRef}
         style={styles.messageList}
@@ -129,11 +127,11 @@ export default function ChatScreen() {
         ListEmptyComponent={
           <View style={styles.emptyChat}>
             <Text style={styles.emptyChatText}>
-              Ask Claude anything about{'\n'}
-              {profile?.name ?? 'your child'}'s eczema management.
+              Ask the Mage anything about{'\n'}
+              {profile?.name ?? 'your child'}&apos;s eczema management.
             </Text>
             <Text style={styles.emptyChatHint}>
-              Try: "Why might she flare more on weekends?" or "What should I ask at the next appointment?"
+              Try: &quot;Why might she flare more on weekends?&quot;
             </Text>
           </View>
         }
@@ -143,22 +141,20 @@ export default function ChatScreen() {
         showsVerticalScrollIndicator={false}
       />
 
-      {/* Loading indicator */}
       {loading && (
         <View style={styles.loadingRow}>
-          <ActivityIndicator color="#FFD700" size="small" />
-          <Text style={styles.loadingText}>Claude is thinking…</Text>
+          <ActivityIndicator color={Colors.gold} size="small" />
+          <Text style={styles.loadingText}>Mage is thinking…</Text>
         </View>
       )}
 
-      {/* Input row */}
       <View style={styles.inputRow}>
         <TextInput
           style={[styles.textInput, loading && styles.inputDisabled]}
           value={input}
           onChangeText={setInput}
           placeholder="Ask a question…"
-          placeholderTextColor="#555"
+          placeholderTextColor="#666"
           multiline
           editable={!loading}
           returnKeyType="send"
@@ -170,7 +166,7 @@ export default function ChatScreen() {
           onPress={handleSend}
           disabled={!input.trim() || loading}
         >
-          <Text style={styles.sendBtnText}>Send</Text>
+          <Text style={styles.sendBtnText}>SEND</Text>
         </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>
@@ -178,121 +174,39 @@ export default function ChatScreen() {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: '#1a1a2e' },
-  loadingScreen: {
-    flex: 1,
-    backgroundColor: '#1a1a2e',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingTop: 56,
-    paddingHorizontal: 20,
-    paddingBottom: 12,
-  },
+  screen: { flex: 1, backgroundColor: 'transparent' },
+  loadingScreen: { flex: 1, backgroundColor: 'transparent', alignItems: 'center', justifyContent: 'center' },
+  headerRow: { flexDirection: 'row', alignItems: 'center', paddingTop: 56, paddingHorizontal: 20, paddingBottom: 12 },
   backBtn: { paddingRight: 12, paddingVertical: 4 },
-  backText: { color: '#FFD700', fontSize: 15, fontWeight: '600' },
-  title: {
-    flex: 1,
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: 'bold',
-    textAlign: 'center',
-  },
+  backText: { fontFamily: Fonts.pixelBold, color: '#fff', fontSize: 10 },
+  title: { flex: 1, fontFamily: Fonts.pixelBold, color: Colors.gold, fontSize: 16, textAlign: 'center', textShadowColor: '#000', textShadowOffset: {width: 2, height: 2}, textShadowRadius: 0 },
   headerSpacer: { width: 48 },
-  disclosureBanner: {
-    backgroundColor: '#1e1e35',
-    borderBottomWidth: 1,
-    borderColor: '#3a3a5e',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-  },
-  disclosureText: { color: '#888', fontSize: 11, lineHeight: 16 },
+  
+  disclosureBanner: { backgroundColor: 'rgba(0,0,0,0.5)', borderBottomWidth: 4, borderColor: Colors.cardBorder, paddingHorizontal: 20, paddingVertical: 10 },
+  disclosureText: { fontFamily: Fonts.pixel, color: '#ccc', fontSize: 14, lineHeight: 20, textAlign: 'center' },
+  
   messageList: { flex: 1 },
   listContent: { paddingVertical: 12 },
   emptyContainer: { flex: 1 },
-  emptyChat: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 32,
-    paddingTop: 60,
-    gap: 12,
-  },
-  emptyChatText: {
-    color: '#aaa',
-    fontSize: 16,
-    textAlign: 'center',
-    lineHeight: 24,
-    fontWeight: '600',
-  },
-  emptyChatHint: {
-    color: '#555',
-    fontSize: 13,
-    textAlign: 'center',
-    lineHeight: 20,
-    fontStyle: 'italic',
-  },
-  bubble: {
-    maxWidth: '80%',
-    borderRadius: 14,
-    padding: 12,
-    marginVertical: 4,
-    marginHorizontal: 16,
-  },
-  userBubble: {
-    backgroundColor: '#FFD700',
-    alignSelf: 'flex-end',
-  },
-  assistantBubble: {
-    backgroundColor: '#2a2a3e',
-    alignSelf: 'flex-start',
-    borderWidth: 1,
-    borderColor: '#3a3a5e',
-  },
-  bubbleText: { fontSize: 14, lineHeight: 20 },
-  userBubbleText: { color: '#1a1a2e', fontWeight: '600' },
-  assistantBubbleText: { color: '#fff' },
-  loadingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    paddingHorizontal: 20,
-    paddingVertical: 8,
-  },
-  loadingText: { color: '#aaa', fontSize: 13, fontStyle: 'italic' },
-  inputRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    gap: 10,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    paddingBottom: Platform.OS === 'ios' ? 28 : 16,
-    borderTopWidth: 1,
-    borderColor: '#3a3a5e',
-    backgroundColor: '#1a1a2e',
-  },
-  textInput: {
-    flex: 1,
-    backgroundColor: '#2a2a3e',
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#3a3a5e',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    color: '#fff',
-    fontSize: 15,
-    maxHeight: 120,
-  },
-  inputDisabled: { opacity: 0.5 },
-  sendBtn: {
-    backgroundColor: '#FFD700',
-    borderRadius: 20,
-    paddingHorizontal: 18,
-    paddingVertical: 10,
-  },
-  sendBtnDisabled: { opacity: 0.35 },
-  sendBtnText: { color: '#1a1a2e', fontWeight: 'bold', fontSize: 14 },
+  emptyChat: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32, paddingTop: 60, gap: 12 },
+  emptyChatText: { fontFamily: Fonts.pixel, color: '#fff', fontSize: 24, textAlign: 'center', lineHeight: 32, textShadowColor: '#000', textShadowOffset: {width: 1, height: 1}, textShadowRadius: 0 },
+  emptyChatHint: { fontFamily: Fonts.pixel, color: Colors.gold, fontSize: 16, textAlign: 'center', lineHeight: 22, marginTop: 12 },
+  
+  bubble: { maxWidth: '80%', padding: 16, marginVertical: 8, marginHorizontal: 16, borderWidth: 4, shadowColor: '#000', shadowOffset: {width: 4, height: 4}, shadowOpacity: 1, shadowRadius: 0, elevation: 0 },
+  userBubble: { backgroundColor: Colors.gold, borderColor: '#fff', alignSelf: 'flex-end' },
+  assistantBubble: { backgroundColor: Colors.card, borderColor: Colors.cardBorder, alignSelf: 'flex-start' },
+  
+  bubbleText: { fontSize: 18, lineHeight: 26 },
+  userBubbleText: { fontFamily: Fonts.pixel, color: '#000' },
+  assistantBubbleText: { fontFamily: Fonts.pixel, color: Colors.text },
+
+  loadingRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 12 },
+  loadingText: { fontFamily: Fonts.pixelBold, color: Colors.gold, fontSize: 10 },
+
+  inputRow: { flexDirection: 'row', alignItems: 'flex-end', gap: 8, paddingHorizontal: 16, paddingVertical: 12, borderTopWidth: 4, borderColor: Colors.cardBorder, backgroundColor: Colors.card },
+  textInput: { flex: 1, backgroundColor: '#e8ddc5', borderWidth: 4, borderColor: Colors.cardBorder, paddingHorizontal: 16, paddingTop: 16, paddingBottom: 16, fontFamily: Fonts.pixel, fontSize: 20, color: Colors.text, maxHeight: 120 },
+  inputDisabled: { opacity: 0.7 },
+  sendBtn: { backgroundColor: Colors.primary, paddingHorizontal: 16, paddingVertical: 18, justifyContent: 'center', alignItems: 'center', borderWidth: 4, borderColor: '#fff', shadowColor: '#000', shadowOffset: {width: 4, height: 4}, shadowOpacity: 1, shadowRadius: 0, elevation: 0 },
+  sendBtnDisabled: { backgroundColor: '#888', borderColor: '#444', shadowOpacity: 0 },
+  sendBtnText: { fontFamily: Fonts.pixelBold, color: '#fff', fontSize: 12, textShadowColor: '#000', textShadowOffset: {width: 1, height: 1}, textShadowRadius: 0 },
 });

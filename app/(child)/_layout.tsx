@@ -1,22 +1,22 @@
-import { MaterialIcons } from '@expo/vector-icons';
-import { useAuth } from '@clerk/clerk-expo';
-import { Redirect, Tabs } from 'expo-router';
-import { TextStyle, ViewStyle } from 'react-native';
-import { PinGate } from '@/lib/auth/PinGate';
+import { PinGate } from "@/lib/auth/PinGate";
+import { useAuth } from "@clerk/clerk-expo";
+import { MaterialIcons } from "@expo/vector-icons";
+import { Redirect, Tabs } from "expo-router";
+import { TextStyle, ViewStyle } from "react-native";
 
 const tabBarStyle: ViewStyle = {
-  backgroundColor: '#020b02',
+  backgroundColor: "#020b02",
   borderTopWidth: 4,
-  borderTopColor: 'rgba(10,106,29,0.30)',
+  borderTopColor: "rgba(10,106,29,0.30)",
   height: 72,
   paddingBottom: 10,
 };
 
 const tabLabelStyle: TextStyle = {
   fontSize: 10,
-  fontWeight: '700',
+  fontWeight: "700",
   letterSpacing: 1,
-  textTransform: 'uppercase',
+  textTransform: "uppercase",
 };
 
 export default function ChildLayout() {
@@ -32,15 +32,16 @@ export default function ChildLayout() {
         screenOptions={{
           headerShown: false,
           tabBarStyle,
-          tabBarActiveTintColor: '#FFD700',
-          tabBarInactiveTintColor: 'rgba(242,249,234,0.40)',
+          tabBarActiveTintColor: "#FFD700",
+          tabBarInactiveTintColor: "rgba(242,249,234,0.40)",
           tabBarLabelStyle: tabLabelStyle,
+          sceneContainerStyle: { backgroundColor: "transparent" },
         }}
       >
         <Tabs.Screen
           name="home"
           options={{
-            title: 'Quests',
+            title: "Quests",
             tabBarIcon: ({ color, size }) => (
               <MaterialIcons name="map" size={size} color={color} />
             ),
@@ -49,7 +50,7 @@ export default function ChildLayout() {
         <Tabs.Screen
           name="store"
           options={{
-            title: 'Store',
+            title: "Store",
             tabBarIcon: ({ color, size }) => (
               <MaterialIcons name="store" size={size} color={color} />
             ),
@@ -58,7 +59,7 @@ export default function ChildLayout() {
         <Tabs.Screen
           name="plan"
           options={{
-            title: 'Health',
+            title: "Health",
             tabBarIcon: ({ color, size }) => (
               <MaterialIcons name="favorite" size={size} color={color} />
             ),
@@ -67,7 +68,7 @@ export default function ChildLayout() {
         <Tabs.Screen
           name="log"
           options={{
-            title: 'Log',
+            title: "Log",
             tabBarIcon: ({ color, size }) => (
               <MaterialIcons name="article" size={size} color={color} />
             ),
@@ -77,7 +78,7 @@ export default function ChildLayout() {
           name="emergency"
           options={{
             href: null,
-            tabBarStyle: { display: 'none' },
+            tabBarStyle: { display: "none" },
           }}
         />
       </Tabs>

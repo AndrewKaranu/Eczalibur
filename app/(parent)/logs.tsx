@@ -3,11 +3,12 @@ import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native
 import { router } from 'expo-router';
 import { useAppStore } from '@/store/useAppStore';
 import type { FlareLog, Zone } from '@/lib/types';
+import { Colors, Fonts } from '@/constants/theme';
 
 const ZONE_CONFIG: Record<Zone, { label: string; color: string; bg: string; border: string }> = {
-  green: { label: '🟢 Green', color: '#4ade80', bg: '#0d2b0d', border: '#4ade80' },
-  yellow: { label: '🟡 Yellow', color: '#FFD700', bg: '#2b2200', border: '#FFD700' },
-  red: { label: '🔴 Red', color: '#ff4444', bg: '#2b0000', border: '#ff4444' },
+  green: { label: '🟢 Green', color: '#000', bg: '#4ade80', border: '#fff' },
+  yellow: { label: '🟡 Yellow', color: '#000', bg: '#FFD700', border: '#fff' },
+  red: { label: '🔴 Red', color: '#fff', bg: '#ff4444', border: '#ffc1c1' },
 };
 
 const MOOD_EMOJIS = ['', '😊', '🙂', '😕', '😣', '😭'];
@@ -58,16 +59,14 @@ export default function LogsScreen() {
 
   return (
     <View style={styles.screen}>
-      {/* Header */}
       <View style={styles.headerRow}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-          <Text style={styles.backText}>← Back</Text>
+          <Text style={styles.backText}>← BACK</Text>
         </TouchableOpacity>
-        <Text style={styles.title}>Flare Log History</Text>
+        <Text style={styles.title}>FLARE LOG</Text>
         <View style={styles.headerSpacer} />
       </View>
 
-      {/* Zone filter pills */}
       <View style={styles.filterRow}>
         {FILTERS.map(({ key, label }) => (
           <TouchableOpacity
@@ -82,7 +81,6 @@ export default function LogsScreen() {
         ))}
       </View>
 
-      {/* Log list */}
       <FlatList
         data={filteredLogs}
         keyExtractor={(item) => item.id}
@@ -93,7 +91,7 @@ export default function LogsScreen() {
         ListEmptyComponent={
           <View style={styles.emptyInner}>
             <Text style={styles.emptyText}>
-              No logs yet.{'\n'}Start a quest to log your first flare!
+              No logs yet.
             </Text>
           </View>
         }
@@ -104,84 +102,28 @@ export default function LogsScreen() {
 }
 
 const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    backgroundColor: '#1a1a2e',
-  },
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingTop: 56,
-    paddingHorizontal: 20,
-    paddingBottom: 12,
-  },
+  screen: { flex: 1, backgroundColor: 'transparent' },
+  headerRow: { flexDirection: 'row', alignItems: 'center', paddingTop: 56, paddingHorizontal: 20, paddingBottom: 12 },
   backBtn: { paddingRight: 12, paddingVertical: 4 },
-  backText: { color: '#FFD700', fontSize: 15, fontWeight: '600' },
-  title: {
-    flex: 1,
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: 'bold',
-    textAlign: 'center',
-  },
+  backText: { fontFamily: Fonts.pixelBold, color: '#fff', fontSize: 10 },
+  title: { flex: 1, fontFamily: Fonts.pixelBold, color: Colors.gold, fontSize: 16, textAlign: 'center', textShadowColor: '#000', textShadowOffset: {width: 2, height: 2}, textShadowRadius: 0 },
   headerSpacer: { width: 48 },
-  filterRow: {
-    flexDirection: 'row',
-    gap: 8,
-    paddingHorizontal: 20,
-    paddingBottom: 12,
-  },
-  pill: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#3a3a5e',
-    backgroundColor: '#2a2a3e',
-  },
-  pillActive: {
-    backgroundColor: '#FFD700',
-    borderColor: '#FFD700',
-  },
-  pillText: { color: '#aaa', fontSize: 14, fontWeight: '600' },
-  pillTextActive: { color: '#1a1a2e' },
+  filterRow: { flexDirection: 'row', gap: 8, paddingHorizontal: 20, paddingBottom: 16 },
+  pill: { paddingHorizontal: 16, paddingVertical: 10, borderWidth: 4, borderColor: Colors.cardBorder, backgroundColor: Colors.card, shadowColor: '#000', shadowOffset: {width: 4, height: 4}, shadowOpacity: 1, shadowRadius: 0, elevation: 0 },
+  pillActive: { backgroundColor: Colors.gold, borderColor: '#fff' },
+  pillText: { fontFamily: Fonts.pixelBold, color: '#444', fontSize: 10 },
+  pillTextActive: { color: '#000' },
   listContent: { paddingHorizontal: 20, paddingBottom: 32 },
   emptyContainer: { flex: 1 },
-  emptyInner: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingTop: 80,
-  },
-  emptyText: {
-    color: '#555',
-    fontSize: 16,
-    textAlign: 'center',
-    lineHeight: 24,
-  },
-  logRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#2a2a3e',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#3a3a5e',
-    padding: 14,
-    marginBottom: 10,
-    gap: 12,
-  },
-  zoneBadge: {
-    borderRadius: 8,
-    borderWidth: 1,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    minWidth: 70,
-    alignItems: 'center',
-  },
-  zoneBadgeText: { fontSize: 11, fontWeight: '700', letterSpacing: 0.5 },
-  logMeta: { flex: 1, gap: 2 },
-  logDate: { color: '#fff', fontSize: 13, fontWeight: '600' },
-  logMood: { color: '#aaa', fontSize: 12 },
-  logAreas: { color: '#888', fontSize: 11 },
-  photoTag: { fontSize: 18 },
+  emptyInner: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingTop: 80 },
+  emptyText: { fontFamily: Fonts.pixel, color: '#fff', fontSize: 24, textAlign: 'center', lineHeight: 32, textShadowColor: '#000', textShadowOffset: {width: 1, height: 1}, textShadowRadius: 0 },
+  
+  logRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: Colors.card, borderWidth: 4, borderColor: Colors.cardBorder, padding: 14, marginBottom: 16, gap: 12, shadowColor: '#000', shadowOffset: {width: 4, height: 4}, shadowOpacity: 1, shadowRadius: 0, elevation: 0 },
+  zoneBadge: { borderWidth: 2, paddingHorizontal: 6, paddingVertical: 4, minWidth: 60, alignItems: 'center' },
+  zoneBadgeText: { fontFamily: Fonts.pixelBold, fontSize: 8, letterSpacing: 0.5 },
+  logMeta: { flex: 1, gap: 4 },
+  logDate: { fontFamily: Fonts.pixelBold, color: Colors.text, fontSize: 11 },
+  logMood: { fontFamily: Fonts.pixel, color: '#222', fontSize: 16 },
+  logAreas: { fontFamily: Fonts.pixelBold, color: '#444', fontSize: 10 },
+  photoTag: { fontSize: 24 },
 });

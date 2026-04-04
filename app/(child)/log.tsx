@@ -1,6 +1,7 @@
+import * as ExpoCrypto from 'expo-crypto';
 import * as ImagePicker from 'expo-image-picker';
 import { router } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import {
   Image,
   ScrollView,
@@ -8,12 +9,12 @@ import {
   Text,
   TouchableOpacity,
   View,
+  Alert,
+  ActivityIndicator
 } from 'react-native';
-import { useTheme } from '@/context/ThemeContext';
 import { useAppStore } from '@/store/useAppStore';
 import type { BodyArea, FlareLog } from '@/lib/types';
-
-// ─── Constants ────────────────────────────────────────────────────────────────
+import { Colors, Fonts } from '@/constants/theme';
 
 const MOOD_OPTIONS = [
   { score: 1, emoji: '😊', label: 'Great!' },
@@ -28,482 +29,192 @@ const ALL_AREAS: BodyArea[] = [
 ];
 
 const AREA_LABELS: Record<BodyArea, string> = {
-  face: 'Face', neck: 'Neck', chest: 'Chest', back: 'Back',
-  arms: 'Arms', hands: 'Hands', legs: 'Legs', feet: 'Feet',
-  scalp: 'Scalp', other: 'Other',
+  face: 'Face',
+  neck: 'Neck',
+  chest: 'Chest',
+  back: 'Back',
+  arms: 'Arms',
+  hands: 'Hands',
+  legs: 'Legs',
+  feet: 'Feet',
+  scalp: 'Scalp',
+  other: 'Other',
 };
 
-const COOLDOWN_MS  = 10 * 60 * 1000; // 10 minutes
-const MAX_PHOTOS   = 3;
-const MAX_DAILY    = 3;
-
-type Step = 1 | 2 | 3 | 'done';
-
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-
-function formatCountdown(ms: number): string {
-  const totalSecs = Math.max(0, Math.ceil(ms / 1000));
-  const mins = Math.floor(totalSecs / 60);
-  const secs = totalSecs % 60;
-  return `${mins}:${secs.toString().padStart(2, '0')}`;
-}
-
-// ─── Screen ───────────────────────────────────────────────────────────────────
-
 export default function LogScreen() {
-  const { theme } = useTheme();
-  const { profile, points, flareLogs, currentZone, addFlareLog, awardPoints } = useAppStore();
+  const { profile, addFlareLog, currentZone } = useAppStore();
+  const [mood, setMood] = useState<number | null>(null);
+  const [areas, setAreas] = useState<BodyArea[]>([]);
+  const [image, setImage] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  const zone           = currentZone();
-  const monitoredAreas = profile?.affectedAreas ?? [];
+  const bestZone = currentZone();
 
-  // ── Daily cap & cooldown ─────────────────────────────────────────────────────
-  const todayStr    = new Date().toDateString();
-  const todayLogs   = flareLogs.filter(l => new Date(l.timestamp).toDateString() === todayStr);
-  const todayCount  = todayLogs.length;
-  const isAtLimit   = todayCount >= MAX_DAILY;
-
-  const lastLogTime = flareLogs.length > 0
-    ? new Date(flareLogs[flareLogs.length - 1].timestamp).getTime()
-    : 0;
-
-  const [timeLeft, setTimeLeft] = useState(() =>
-    Math.max(0, COOLDOWN_MS - (Date.now() - lastLogTime)),
-  );
-
-  useEffect(() => {
-    if (timeLeft <= 0) return;
-    const interval = setInterval(() => {
-      const remaining = Math.max(0, COOLDOWN_MS - (Date.now() - lastLogTime));
-      setTimeLeft(remaining);
-      if (remaining <= 0) clearInterval(interval);
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [lastLogTime]);
-
-  const isOnCooldown = timeLeft > 0;
-
-  // ── Form state ───────────────────────────────────────────────────────────────
-  const [step,          setStep]          = useState<Step>(1);
-  const [moodScore,     setMoodScore]     = useState<number | null>(null);
-  const [selectedAreas, setSelectedAreas] = useState<BodyArea[]>(monitoredAreas);
-  const [photoUris,     setPhotoUris]     = useState<string[]>([]);
-  const [pointsEarned,  setPointsEarned]  = useState(0);
-  const [loading,       setLoading]       = useState(false);
-
-  function toggleArea(area: BodyArea) {
-    setSelectedAreas(prev =>
-      prev.includes(area) ? prev.filter(a => a !== area) : [...prev, area],
-    );
+  function toggleArea(a: BodyArea) {
+    if (areas.includes(a)) setAreas(areas.filter((x) => x !== a));
+    else setAreas([...areas, a]);
   }
 
-  async function pickPhoto() {
-    if (photoUris.length >= MAX_PHOTOS) return;
+  async function pickImage() {
+    const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!perm.granted) {
+      Alert.alert('Permission Denied', 'We need access to your photos to save an image.');
+      return;
+    }
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
-      quality: 0.7,
-      base64: false,
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      quality: 0.5,
     });
-    if (!result.canceled && result.assets[0]) {
-      setPhotoUris(prev => [...prev, result.assets[0].uri]);
+    if (!result.canceled && result.assets?.[0]?.uri) {
+      setImage(result.assets[0].uri);
     }
   }
 
-  async function handleSubmit() {
-    if (!moodScore) return;
+  async function handleSave() {
+    if (!profile) return;
+    if (!mood) {
+      Alert.alert('Missing Mood', 'How does your skin feel?');
+      return;
+    }
+    if (areas.length === 0) {
+      Alert.alert('Missing Location', 'Where does it itch?');
+      return;
+    }
+
     setLoading(true);
-
-    // +5 per photo, base 10
-    const earned = 10 + photoUris.length * 5;
-
-    const log: FlareLog = {
-      id:            `log_${Date.now()}`,
-      childId:       profile?.id ?? 'unknown',
-      timestamp:     new Date().toISOString(),
-      zone,
-      moodScore,
-      affectedAreas: selectedAreas,
-      notes:         '',
-      photoUri:      photoUris[0] ?? null,
-      photoUris,
-      pointsAwarded: earned,
-    };
-
-    await addFlareLog(log);
-    await awardPoints(earned);
-
-    setPointsEarned(earned);
-    setLoading(false);
-    setStep('done');
-    // Reset cooldown display immediately
-    setTimeLeft(COOLDOWN_MS);
+    try {
+      const newLog: FlareLog = {
+        id: ExpoCrypto.randomUUID(),
+        childId: profile.id,
+        timestamp: new Date().toISOString(),
+        zone: bestZone,
+        moodScore: mood as 1|2|3|4|5,
+        affectedAreas: areas,
+        photoUri: image || undefined,
+        notes: '',
+      };
+      
+      await addFlareLog(newLog);
+      
+      Alert.alert('Saved!', 'Your journal has been updated. +10 💰', [
+        { text: 'OK', onPress: () => router.push('/(child)/home') }
+      ]);
+    } catch (e) {
+      Alert.alert('Error', 'Failed to save log.');
+    } finally {
+      setLoading(false);
+    }
   }
 
-  // ─── Guard: daily limit ───────────────────────────────────────────────────────
+  return (
+    <View style={styles.screen}>
+      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+        
+        <View style={styles.header}>
+          <Text style={styles.titleBadge}>📖</Text>
+          <Text style={styles.title}>JOURNAL</Text>
+        </View>
 
-  if (isAtLimit && step !== 'done') {
-    return (
-      <View style={[styles.screen, { backgroundColor: theme.bgPrimary }]}>
-        <View style={styles.centreContainer}>
-          <Text style={styles.bigEmoji}>📋</Text>
-          <Text style={[styles.guardTitle, { color: theme.gold }]}>Daily Limit Reached</Text>
-          <Text style={[styles.guardSub, { color: theme.textMuted }]}>
-            You've logged {MAX_DAILY} times today — great work!{'\n'}Come back tomorrow for more quests.
-          </Text>
-          <View style={[styles.limitBadges, { borderColor: theme.border }]}>
-            {[...Array(MAX_DAILY)].map((_, i) => (
-              <Text key={i} style={styles.limitDot}>📜</Text>
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>HOW DO YOU FEEL?</Text>
+          <View style={styles.moodGrid}>
+            {MOOD_OPTIONS.map((m) => (
+              <TouchableOpacity
+                key={m.score}
+                style={[styles.moodBtn, mood === m.score && styles.moodBtnActive]}
+                onPress={() => setMood(m.score)}
+              >
+                <Text style={styles.moodEmoji}>{m.emoji}</Text>
+                <Text style={[styles.moodLabel, mood === m.score && styles.moodLabelActive]}>{m.label}</Text>
+              </TouchableOpacity>
             ))}
           </View>
         </View>
-      </View>
-    );
-  }
 
-  // ─── Guard: cooldown ──────────────────────────────────────────────────────────
-
-  if (isOnCooldown && step !== 'done') {
-    const pct = 1 - timeLeft / COOLDOWN_MS;
-    return (
-      <View style={[styles.screen, { backgroundColor: theme.bgPrimary }]}>
-        <View style={styles.centreContainer}>
-          <Text style={styles.bigEmoji}>⏳</Text>
-          <Text style={[styles.guardTitle, { color: theme.gold }]}>Next log available in</Text>
-          <View style={[styles.timerRing, { borderColor: theme.green }]}>
-            <Text style={[styles.timerDigits, { color: theme.green }]}>
-              {formatCountdown(timeLeft)}
-            </Text>
-            <Text style={[styles.timerLabel, { color: theme.textMuted }]}>remaining</Text>
-          </View>
-          <View style={[styles.cooldownBar, { backgroundColor: theme.border }]}>
-            <View style={[styles.cooldownFill, { backgroundColor: theme.green, width: `${pct * 100}%` }]} />
-          </View>
-          <Text style={[styles.guardSub, { color: theme.textMuted }]}>
-            Logs today: {todayCount} / {MAX_DAILY}
-          </Text>
-        </View>
-      </View>
-    );
-  }
-
-  // ─── Done screen ──────────────────────────────────────────────────────────────
-
-  if (step === 'done') {
-    return (
-      <View style={[styles.screen, { backgroundColor: theme.bgPrimary }]}>
-        <View style={styles.centreContainer}>
-          <Text style={styles.bigEmoji}>🪙</Text>
-          <Text style={[styles.doneTitle, { color: theme.gold }]}>Quest Logged!</Text>
-          <Text style={[styles.doneSub, { color: theme.textMuted }]}>
-            +{pointsEarned} gold earned{'\n'}Total: 🪙 {points.total}
-          </Text>
-          <View style={[styles.cooldownNote, { backgroundColor: theme.bgCard, borderColor: theme.border }]}>
-            <Text style={[styles.cooldownNoteText, { color: theme.textMuted }]}>
-              ⏳ Next log unlocks in 10 minutes
-            </Text>
-          </View>
-          <TouchableOpacity
-            style={[styles.doneButton, { backgroundColor: theme.gold }]}
-            onPress={() => router.replace('/(child)/home')}
-          >
-            <Text style={[styles.doneButtonText, { color: theme.bgNav }]}>Back to Quests</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    );
-  }
-
-  // ─── Step 1: Mood ─────────────────────────────────────────────────────────────
-
-  if (step === 1) {
-    return (
-      <View style={[styles.screen, { backgroundColor: theme.bgPrimary }]}>
-        <ScrollView contentContainerStyle={styles.scroll}>
-          <Text style={[styles.stepLabel, { color: theme.textMuted }]}>STEP 1 OF 3</Text>
-          <Text style={[styles.title, { color: theme.gold }]}>How does your skin feel?</Text>
-          <Text style={[styles.subtitle, { color: theme.textMuted }]}>
-            Tap the face that matches right now
-          </Text>
-
-          <View style={styles.moodGrid}>
-            {MOOD_OPTIONS.map(({ score, emoji, label }) => {
-              const selected = moodScore === score;
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>WHERE DOES IT ITCH?</Text>
+          <View style={styles.areaGrid}>
+            {ALL_AREAS.map((a) => {
+              const active = areas.includes(a);
               return (
                 <TouchableOpacity
-                  key={score}
-                  style={[
-                    styles.moodCard,
-                    { backgroundColor: theme.bgCard, borderColor: theme.border },
-                    selected && { borderColor: theme.gold, backgroundColor: 'rgba(255,215,0,0.12)' },
-                  ]}
-                  onPress={() => setMoodScore(score)}
-                  activeOpacity={0.7}
+                  key={a}
+                  style={[styles.areaPill, active && styles.areaPillActive]}
+                  onPress={() => toggleArea(a)}
                 >
-                  <Text style={styles.moodEmoji}>{emoji}</Text>
-                  <Text style={[styles.moodLabel, { color: selected ? theme.gold : theme.textMuted }]}>
-                    {label}
-                  </Text>
+                  <Text style={[styles.areaText, active && styles.areaTextActive]}>{AREA_LABELS[a]}</Text>
                 </TouchableOpacity>
               );
             })}
           </View>
+        </View>
 
-          <TouchableOpacity
-            style={[
-              styles.primaryBtn,
-              { backgroundColor: theme.gold },
-              !moodScore && { opacity: 0.35 },
-            ]}
-            onPress={() => moodScore && setStep(2)}
-            disabled={!moodScore}
-          >
-            <Text style={[styles.primaryBtnText, { color: theme.bgNav }]}>Next →</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.backLink} onPress={() => router.back()}>
-            <Text style={[styles.backLinkText, { color: theme.textMuted }]}>← Cancel</Text>
-          </TouchableOpacity>
-        </ScrollView>
-      </View>
-    );
-  }
-
-  // ─── Step 2: Body areas ───────────────────────────────────────────────────────
-
-  if (step === 2) {
-    return (
-      <View style={[styles.screen, { backgroundColor: theme.bgPrimary }]}>
-        <ScrollView contentContainerStyle={styles.scroll}>
-          <Text style={[styles.stepLabel, { color: theme.textMuted }]}>STEP 2 OF 3</Text>
-          <Text style={[styles.title, { color: theme.gold }]}>Where is it bothering you?</Text>
-          <Text style={[styles.subtitle, { color: theme.textMuted }]}>
-            Tap all areas that feel itchy or sore today
-          </Text>
-
-          <View style={styles.chipGrid}>
-            {ALL_AREAS.map((area) => {
-              const isSelected  = selectedAreas.includes(area);
-              const isMonitored = monitoredAreas.includes(area);
-              return (
-                <TouchableOpacity
-                  key={area}
-                  style={[
-                    styles.chip,
-                    { backgroundColor: theme.bgCard, borderColor: theme.border },
-                    isSelected   && { borderColor: theme.gold, backgroundColor: 'rgba(255,215,0,0.12)' },
-                    isMonitored && !isSelected && { borderColor: theme.green, borderStyle: 'dashed' },
-                  ]}
-                  onPress={() => toggleArea(area)}
-                  activeOpacity={0.7}
-                >
-                  <Text style={[styles.chipText, { color: isSelected ? theme.gold : theme.textMuted }]}>
-                    {isMonitored ? '📍 ' : ''}{AREA_LABELS[area]}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-
-          <Text style={[styles.hint, { color: theme.textMuted }]}>
-            📍 = areas your parent set up to watch
-          </Text>
-
-          <TouchableOpacity
-            style={[styles.primaryBtn, { backgroundColor: theme.gold }]}
-            onPress={() => setStep(3)}
-          >
-            <Text style={[styles.primaryBtnText, { color: theme.bgNav }]}>Next →</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.backLink} onPress={() => setStep(1)}>
-            <Text style={[styles.backLinkText, { color: theme.textMuted }]}>← Back</Text>
-          </TouchableOpacity>
-        </ScrollView>
-      </View>
-    );
-  }
-
-  // ─── Step 3: Photos ───────────────────────────────────────────────────────────
-
-  const canAddMore = photoUris.length < MAX_PHOTOS;
-  const earned     = 10 + photoUris.length * 5;
-
-  return (
-    <View style={[styles.screen, { backgroundColor: theme.bgPrimary }]}>
-      <ScrollView contentContainerStyle={styles.scroll}>
-        <Text style={[styles.stepLabel, { color: theme.textMuted }]}>STEP 3 OF 3</Text>
-        <Text style={[styles.title, { color: theme.gold }]}>Add photos? (+5 each)</Text>
-        <Text style={[styles.subtitle, { color: theme.textMuted }]}>
-          Photos help track how your skin changes.{'\n'}
-          Up to {MAX_PHOTOS} photos — totally optional!
-        </Text>
-
-        {/* Photo slots */}
-        <View style={styles.photoRow}>
-          {photoUris.map((uri, i) => (
-            <View key={i} style={styles.photoThumbContainer}>
-              <Image source={{ uri }} style={styles.photoThumb} resizeMode="cover" />
-              <TouchableOpacity
-                style={[styles.removePhoto, { backgroundColor: theme.error }]}
-                onPress={() => setPhotoUris(prev => prev.filter((_, idx) => idx !== i))}
-              >
-                <Text style={styles.removePhotoX}>✕</Text>
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>TAKE A PICTURE?</Text>
+          {image ? (
+            <View style={styles.imageBox}>
+              <Image source={{ uri: image }} style={styles.preview} />
+              <TouchableOpacity style={styles.removeBtn} onPress={() => setImage(null)}>
+                <Text style={styles.removeText}>X</Text>
               </TouchableOpacity>
             </View>
-          ))}
-          {canAddMore && (
-            <TouchableOpacity
-              style={[styles.addPhotoSlot, { borderColor: theme.border }]}
-              onPress={pickPhoto}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.addPhotoIcon}>📷</Text>
-              <Text style={[styles.addPhotoText, { color: theme.textMuted }]}>
-                {photoUris.length === 0 ? 'Add photo' : 'Add another'}
-              </Text>
+          ) : (
+            <TouchableOpacity style={styles.photoBtn} onPress={pickImage}>
+              <Text style={styles.photoText}>📷 ADD PHOTO</Text>
             </TouchableOpacity>
           )}
         </View>
 
-        <View style={[styles.pointsPreview, { backgroundColor: theme.bgCard, borderColor: theme.border }]}>
-          <Text style={[styles.pointsPreviewText, { color: theme.gold }]}>
-            🪙 {earned} pts this log
-          </Text>
-          <Text style={[styles.pointsBreakdown, { color: theme.textMuted }]}>
-            10 base{photoUris.length > 0 ? ` + ${photoUris.length * 5} photo bonus` : ''}
-          </Text>
-        </View>
-
-        <TouchableOpacity
-          style={[
-            styles.primaryBtn,
-            { backgroundColor: theme.green },
-            loading && { opacity: 0.4 },
-          ]}
-          onPress={handleSubmit}
-          disabled={loading}
+        <TouchableOpacity 
+          style={[styles.saveBtn, (!mood || areas.length === 0) && styles.saveBtnDisabled]} 
+          onPress={handleSave}
+          disabled={!mood || areas.length === 0 || loading}
         >
-          <Text style={[styles.primaryBtnText, { color: theme.bgNav }]}>
-            {loading ? 'Saving…' : `✓ Log it! (+${earned} pts)`}
-          </Text>
+          {loading ? (
+            <ActivityIndicator color="#000" size="small" />
+          ) : (
+            <Text style={styles.saveBtnText}>SAVE LOG (+10 💰)</Text>
+          )}
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.backLink} onPress={() => setStep(2)}>
-          <Text style={[styles.backLinkText, { color: theme.textMuted }]}>← Back</Text>
-        </TouchableOpacity>
       </ScrollView>
     </View>
   );
 }
 
-// ─── Styles ───────────────────────────────────────────────────────────────────
-
 const styles = StyleSheet.create({
-  screen: { flex: 1 },
-  scroll: { paddingHorizontal: 24, paddingTop: 56, paddingBottom: 40 },
-
-  stepLabel: { fontSize: 11, fontWeight: '700', letterSpacing: 2, marginBottom: 8 },
-  title:     { fontSize: 24, fontWeight: '900', marginBottom: 6 },
-  subtitle:  { fontSize: 14, lineHeight: 20, marginBottom: 32 },
-  hint:      { fontSize: 12, marginBottom: 24, textAlign: 'center' },
-
-  // Mood
-  moodGrid: {
-    flexDirection: 'row', flexWrap: 'wrap', gap: 12,
-    justifyContent: 'center', marginBottom: 32,
-  },
-  moodCard: {
-    width: 90, paddingVertical: 18, borderRadius: 16,
-    alignItems: 'center', gap: 8, borderWidth: 2,
-  },
-  moodEmoji: { fontSize: 36 },
-  moodLabel: { fontSize: 12, fontWeight: '600' },
-
-  // Chips
-  chipGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 16 },
-  chip: {
-    paddingHorizontal: 16, paddingVertical: 10,
-    borderRadius: 20, borderWidth: 1.5,
-  },
-  chipText: { fontSize: 13, fontWeight: '600' },
-
-  // Photos
-  photoRow: {
-    flexDirection: 'row', flexWrap: 'wrap', gap: 10,
-    marginBottom: 20,
-  },
-  photoThumbContainer: { position: 'relative' },
-  photoThumb: { width: 96, height: 96, borderRadius: 12 },
-  removePhoto: {
-    position: 'absolute', top: -6, right: -6,
-    width: 22, height: 22, borderRadius: 11,
-    alignItems: 'center', justifyContent: 'center',
-  },
-  removePhotoX: { color: '#fff', fontSize: 11, fontWeight: '900' },
-  addPhotoSlot: {
-    width: 96, height: 96, borderRadius: 12,
-    borderWidth: 2, borderStyle: 'dashed',
-    alignItems: 'center', justifyContent: 'center', gap: 6,
-  },
-  addPhotoIcon: { fontSize: 28 },
-  addPhotoText: { fontSize: 11, fontWeight: '600', textAlign: 'center' },
-
-  // Points preview
-  pointsPreview: {
-    borderRadius: 12, borderWidth: 1,
-    paddingVertical: 12, paddingHorizontal: 16,
-    alignItems: 'center', marginBottom: 24, gap: 4,
-  },
-  pointsPreviewText: { fontSize: 18, fontWeight: '900' },
-  pointsBreakdown:   { fontSize: 12 },
-
-  // Buttons
-  primaryBtn: {
-    borderRadius: 12, paddingVertical: 16,
-    alignItems: 'center', marginBottom: 12,
-  },
-  primaryBtnText: { fontWeight: '900', fontSize: 16, letterSpacing: 0.5 },
-  backLink:     { alignItems: 'center', paddingVertical: 10 },
-  backLinkText: { fontSize: 14 },
-
-  // Guard / cooldown screens
-  centreContainer: {
-    flex: 1, alignItems: 'center', justifyContent: 'center',
-    gap: 16, padding: 32,
-  },
-  bigEmoji:   { fontSize: 64 },
-  guardTitle: { fontSize: 22, fontWeight: '900', textAlign: 'center', letterSpacing: 1 },
-  guardSub:   { fontSize: 14, textAlign: 'center', lineHeight: 22 },
-
-  timerRing: {
-    width: 140, height: 140, borderRadius: 70,
-    borderWidth: 4, alignItems: 'center', justifyContent: 'center', gap: 4,
-  },
-  timerDigits: { fontSize: 36, fontWeight: '900', letterSpacing: 2 },
-  timerLabel:  { fontSize: 11, fontWeight: '700', letterSpacing: 1, textTransform: 'uppercase' },
-
-  cooldownBar: {
-    width: '80%', height: 6, borderRadius: 3, overflow: 'hidden',
-  },
-  cooldownFill: { height: 6, borderRadius: 3 },
-
-  limitBadges: {
-    flexDirection: 'row', gap: 12,
-    borderWidth: 1, borderRadius: 16, padding: 12,
-  },
-  limitDot: { fontSize: 24 },
-
-  // Done
-  doneTitle:     { fontSize: 28, fontWeight: '900' },
-  doneSub:       { fontSize: 16, textAlign: 'center', lineHeight: 26 },
-  cooldownNote: {
-    borderRadius: 10, borderWidth: 1,
-    paddingVertical: 10, paddingHorizontal: 16,
-  },
-  cooldownNoteText: { fontSize: 13, fontWeight: '600' },
-  doneButton: {
-    borderRadius: 12, paddingVertical: 16,
-    paddingHorizontal: 40, marginTop: 8,
-  },
-  doneButtonText: { fontWeight: '900', fontSize: 16 },
+  screen: { flex: 1, backgroundColor: 'transparent' },
+  scroll: { paddingHorizontal: 20, paddingTop: 60, paddingBottom: 100 },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: 20, gap: 12 },
+  titleBadge: { fontSize: 24, textShadowColor: '#000', textShadowOffset: {width: 2, height: 2}, textShadowRadius: 0 },
+  title: { fontFamily: Fonts.pixelBold, color: Colors.gold, fontSize: 20, textShadowColor: '#000', textShadowOffset: {width: 2, height: 2}, textShadowRadius: 0 },
+  
+  card: { backgroundColor: Colors.card, borderWidth: 4, borderColor: Colors.cardBorder, padding: 16, marginBottom: 20, shadowColor: '#000', shadowOffset: {width: 4, height: 4}, shadowOpacity: 1, shadowRadius: 0, elevation: 0 },
+  cardTitle: { fontFamily: Fonts.pixelBold, color: '#000', fontSize: 12, marginBottom: 16, letterSpacing: 1 },
+  
+  moodGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, justifyContent: 'center' },
+  moodBtn: { alignItems: 'center', backgroundColor: '#a99c7f', padding: 10, borderWidth: 4, borderColor: Colors.cardBorder, minWidth: 70 },
+  moodBtnActive: { backgroundColor: Colors.gold, borderColor: '#fff' },
+  moodEmoji: { fontSize: 28, marginBottom: 6 },
+  moodLabel: { fontFamily: Fonts.pixelBold, color: '#444', fontSize: 8 },
+  moodLabelActive: { color: '#000' },
+  
+  areaGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
+  areaPill: { backgroundColor: '#a99c7f', paddingHorizontal: 16, paddingVertical: 12, borderWidth: 4, borderColor: Colors.cardBorder },
+  areaPillActive: { backgroundColor: '#4ade80', borderColor: '#fff' },
+  areaText: { fontFamily: Fonts.pixelBold, color: '#222', fontSize: 10 },
+  areaTextActive: { color: '#000' },
+  
+  photoBtn: { backgroundColor: '#2f67b1', paddingVertical: 16, borderWidth: 4, borderColor: '#fff', alignItems: 'center' },
+  photoText: { fontFamily: Fonts.pixelBold, color: '#fff', fontSize: 12 },
+  
+  imageBox: { position: 'relative', width: 120, height: 120, borderWidth: 4, borderColor: Colors.cardBorder },
+  preview: { width: '100%', height: '100%', resizeMode: 'cover' },
+  removeBtn: { position: 'absolute', top: -10, right: -10, backgroundColor: Colors.healthRed, width: 30, height: 30, borderWidth: 4, borderColor: '#fff', alignItems: 'center', justifyContent: 'center' },
+  removeText: { fontFamily: Fonts.pixelBold, color: '#fff', fontSize: 12, marginTop: 2 },
+  
+  saveBtn: { backgroundColor: Colors.gold, borderWidth: 4, borderColor: '#fff', paddingVertical: 18, alignItems: 'center', marginTop: 10, shadowColor: '#000', shadowOffset: {width: 4, height: 4}, shadowOpacity: 1, shadowRadius: 0, elevation: 0 },
+  saveBtnDisabled: { backgroundColor: '#888', borderColor: '#555', shadowOpacity: 0 },
+  saveBtnText: { fontFamily: Fonts.pixelBold, color: '#000', fontSize: 14, textShadowColor: '#fff', textShadowOffset: {width: 1, height: 1}, textShadowRadius: 0 },
 });
